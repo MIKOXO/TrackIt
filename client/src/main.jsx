@@ -1,7 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Provider } from 'react-redux'
+import { ToastProvider } from './components/ui/ToastProvider.jsx'
 import './index.css'
 import App from './App.jsx'
+import { store } from './store/store.js'
 
 const applyInitialTheme = () => {
   const storedPreference = window.localStorage.getItem('theme')
@@ -13,12 +16,16 @@ const applyInitialTheme = () => {
 
 const rootElement = document.getElementById('root')
 
-if (rootElement) {
-  applyInitialTheme()
+  if (rootElement) {
+    applyInitialTheme()
 
-  createRoot(rootElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  )
-}
+    createRoot(rootElement).render(
+      <StrictMode>
+        <Provider store={store}>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </Provider>
+      </StrictMode>,
+    )
+  }

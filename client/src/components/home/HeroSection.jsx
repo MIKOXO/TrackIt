@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiBarChart2, FiMessageCircle } from 'react-icons/fi'
 import { HiOutlineSparkles } from 'react-icons/hi'
+import { Link } from 'react-router-dom'
 
 const HeroSection = () => {
   return (
@@ -37,13 +38,13 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-trackit-accent to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              Start tracking free
-              <FiArrowRight className="h-4 w-4" />
-            </button>
+          <Link
+            to="/signup"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-trackit-accent to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:shadow-xl"
+          >
+            Start tracking free
+            <FiArrowRight className="h-4 w-4" />
+          </Link>
           </div>
 
           <dl className="mt-6 grid max-w-md grid-cols-2 gap-4 text-xs text-slate-500 dark:text-slate-300 sm:text-sm">

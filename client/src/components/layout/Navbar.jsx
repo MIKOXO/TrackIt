@@ -1,7 +1,7 @@
 import React from 'react'
 import { FiTrendingUp } from 'react-icons/fi'
 import { HiOutlineMoon, HiOutlineSun } from 'react-icons/hi'
-import {Link} from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 const getInitialTheme = () => {
   if (typeof window === 'undefined') {
@@ -67,12 +67,12 @@ const Navbar = () => {
             )}
           </button>
 
-          <button
-            type="button"
+          <Link
+            to="/signup"
             className="inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-gradient-to-r from-emerald-400/80 to-trackit-accent px-4 py-1.5 text-xs font-semibold text-white shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:shadow-xl"
           >
             Get started free
-          </button>
+          </Link>
         </div>
       </nav>
     </header>
