@@ -71,8 +71,13 @@ export const register = async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, password: hashedPassword });
-    const token = generateToken({ userId: user._id, email: user.email });
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'user',
+    });
+    const token = generateToken({ userId: user._id, role: user.role });
 
     res.status(201).json({
       token,
@@ -80,6 +85,7 @@ export const register = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -104,13 +110,14 @@ export const login = async (req, res, next) => {
       return next({ status: 401, message: 'Invalid credentials.' });
     }
 
-    const token = generateToken({ userId: user._id, email: user.email });
+    const token = generateToken({ userId: user._id, role: user.role });
     res.json({
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -128,6 +135,7 @@ export const getCurrentUser = (req, res) => {
       id: req.user.id,
       name: req.user.name,
       email: req.user.email,
+      role: req.user.role,
     },
   });
 };
