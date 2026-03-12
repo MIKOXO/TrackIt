@@ -16,7 +16,7 @@ import { useDispatch } from 'react-redux';
 import { clearUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 
-const menuItems = [
+const defaultMenuItems = [
   { icon: FiHome, label: 'Overview', path: '/dashboard' },
   {
     icon: FiDollarSign,
@@ -28,7 +28,7 @@ const menuItems = [
   { icon: FiSettings, label: 'Settings', path: '/dashboard/settings' },
 ];
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
+const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const location = useLocation();
   const dispatch = useDispatch();
@@ -37,6 +37,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const handleSignOut = () => {
     dispatch(clearUser());
     window.localStorage.removeItem('trackitToken');
+    window.localStorage.removeItem('trackitUser');
     navigate('/', { replace: true });
   };
 

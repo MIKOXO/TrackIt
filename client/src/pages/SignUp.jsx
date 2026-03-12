@@ -139,7 +139,6 @@ const SignUp = () => {
       dispatch(
         setUser({ user: response.data.user, token: response.data.token }),
       );
-      window.localStorage.setItem('trackitToken', response.data.token);
       showToast('Account created successfully', { type: 'success' });
       navigate('/dashboard', { replace: true });
     } catch (err) {

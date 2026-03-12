@@ -66,9 +66,9 @@ const SignIn = () => {
         password: formData.password,
       })
       dispatch(setUser({ user: response.data.user, token: response.data.token }))
-      window.localStorage.setItem('trackitToken', response.data.token)
       showToast('Signed in successfully', { type: 'success' })
-      navigate('/dashboard', { replace: true })
+      const destination = response.data.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'
+      navigate(destination, { replace: true })
     } catch (err) {
       const message = getServerMessage(err, 'Unable to sign in. Check your credentials.')
       dispatch(setError(message))
