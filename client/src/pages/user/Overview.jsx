@@ -4,10 +4,10 @@ import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiCreditCard } from 'react-
 import { useSelector } from 'react-redux'
 
 const stats = [
-  { icon: FiDollarSign, label: 'Total Balance', value: '$12,450.00', change: '+12.5%', trend: 'up' },
-  { icon: FiCreditCard, label: 'This Month', value: '$2,140.00', change: '-8.2%', trend: 'down' },
-  { icon: FiTrendingUp, label: 'Income', value: '$5,200.00', change: '+5.4%', trend: 'up' },
-  { icon: FiTrendingDown, label: 'Expenses', value: '$3,060.00', change: '-3.1%', trend: 'down' },
+  { icon: FiDollarSign, label: 'Total Balance', value: '', change: '', trend: 'up' },
+  { icon: FiCreditCard, label: 'This Month', value: '', change: '', trend: 'down' },
+  { icon: FiTrendingUp, label: 'Income', value: '', change: '', trend: 'up' },
+  { icon: FiTrendingDown, label: 'Expenses', value: '', change: '', trend: 'down' },
 ]
 
 const Overview = () => {
@@ -53,6 +53,7 @@ const Overview = () => {
         ))}
       </div>
 
+
       {/* Recent Activity */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -63,21 +64,8 @@ const Overview = () => {
         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Recent Activity</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Your latest transactions</p>
         
-        <div className="mt-6 space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center justify-between rounded-xl border border-slate-200/60 p-4 dark:border-trackit-border/60">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                  <FiDollarSign className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-50">Transaction {i}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Today at 12:00 PM</p>
-                </div>
-              </div>
-              <span className="font-semibold text-slate-900 dark:text-slate-50">-$50.00</span>
-            </div>
-          ))}
+        <div className="mt-6 text-center text-slate-600 dark:text-slate-400">
+          <p>No transactions yet</p>
         </div>
       </motion.div>
     </div>

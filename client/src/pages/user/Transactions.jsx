@@ -2,13 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiSearch, FiFilter } from 'react-icons/fi'
 
-const transactions = [
-  { id: 1, name: 'Grocery Store', category: 'Food', amount: -85.5, date: '2024-01-15', type: 'expense' },
-  { id: 2, name: 'Salary Deposit', category: 'Income', amount: 5200.0, date: '2024-01-14', type: 'income' },
-  { id: 3, name: 'Netflix Subscription', category: 'Entertainment', amount: -15.99, date: '2024-01-13', type: 'expense' },
-  { id: 4, name: 'Gas Station', category: 'Transport', amount: -45.0, date: '2024-01-12', type: 'expense' },
-  { id: 5, name: 'Restaurant', category: 'Food', amount: -67.8, date: '2024-01-11', type: 'expense' },
-]
+const transactions = []
 
 const Transactions = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -55,49 +49,9 @@ const Transactions = () => {
         className="rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
       >
         <div className="divide-y divide-slate-200/60 dark:divide-trackit-border/60">
-          {transactions.map((transaction, index) => (
-            <motion.div
-              key={transaction.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + index * 0.05 }}
-              className="flex items-center justify-between p-6 transition hover:bg-slate-50 dark:hover:bg-slate-800/30"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                    transaction.type === 'income' ? 'bg-emerald-500/10' : 'bg-rose-500/10'
-                  }`}
-                >
-                  <span
-                    className={`text-lg font-bold ${
-                      transaction.type === 'income'
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-rose-600 dark:text-rose-400'
-                    }`}
-                  >
-                    {transaction.type === 'income' ? '+' : '-'}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-50">{transaction.name}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {transaction.category} • {transaction.date}
-                  </p>
-                </div>
-              </div>
-              <span
-                className={`text-lg font-bold ${
-                  transaction.type === 'income'
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-slate-900 dark:text-slate-50'
-                }`}
-              >
-                {transaction.type === 'income' ? '+' : ''}
-                {transaction.amount.toFixed(2)}
-              </span>
-            </motion.div>
-          ))}
+          <div className="p-6 text-center text-slate-600 dark:text-slate-400">
+            <p>No transactions yet</p>
+          </div>
         </div>
       </motion.div>
     </div>

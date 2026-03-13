@@ -4,15 +4,7 @@ import { FiSend, FiPlus, FiMessageSquare, FiTrash2 } from 'react-icons/fi'
 import { HiOutlineSparkles } from 'react-icons/hi'
 
 const AIAssistant = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'assistant',
-      content:
-        "Hello! I'm your AI financial assistant. I can help you with budgeting, spending analysis, savings goals, and financial advice. What would you like to know?",
-      timestamp: new Date(Date.now() - 5 * 60000),
-    },
-  ])
+  const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -78,22 +70,6 @@ const AIAssistant = () => {
         >
           <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-50">Chat History</h3>
           <div className="flex-1 space-y-2 overflow-y-auto">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <motion.button
-                key={i}
-                whileHover={{ x: 4 }}
-                className={`w-full text-left rounded-lg px-3 py-2 text-sm transition ${
-                  i === 1
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <FiMessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Chat {i}</span>
-                </div>
-              </motion.button>
-            ))}
           </div>
           <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200/60 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:border-trackit-border/60 dark:text-slate-400 dark:hover:bg-slate-800/50">
             <FiTrash2 className="h-4 w-4" />
@@ -107,34 +83,40 @@ const AIAssistant = () => {
           className="flex-1 flex flex-col rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {messages.map((message, index) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-xs rounded-2xl px-4 py-3 lg:max-w-md ${
-                    message.type === 'user'
-                      ? 'bg-gradient-to-r from-trackit-accent to-emerald-500 text-white'
-                      : 'border border-slate-200/60 bg-slate-50 text-slate-900 dark:border-trackit-border/60 dark:bg-slate-800/50 dark:text-slate-50'
-                  }`}
+            {messages.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-slate-600 dark:text-slate-400">No messages yet. Start a conversation!</p>
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
-                  <p
-                    className={`mt-1 text-xs ${
+                  <div
+                    className={`max-w-xs rounded-2xl px-4 py-3 lg:max-w-md ${
                       message.type === 'user'
-                        ? 'text-emerald-100'
-                        : 'text-slate-500 dark:text-slate-400'
+                        ? 'bg-gradient-to-r from-trackit-accent to-emerald-500 text-white'
+                        : 'border border-slate-200/60 bg-slate-50 text-slate-900 dark:border-trackit-border/60 dark:bg-slate-800/50 dark:text-slate-50'
                     }`}
                   >
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p
+                      className={`mt-1 text-xs ${
+                        message.type === 'user'
+                          ? 'text-emerald-100'
+                          : 'text-slate-500 dark:text-slate-400'
+                      }`}
+                    >
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </motion.div>
+              ))
+            )}
 
             {isLoading && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
