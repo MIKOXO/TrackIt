@@ -14,6 +14,7 @@ import {
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../store/slices/authSlice';
+import { clearTransactions } from '../../store/slices/transactionSlice';
 import { useNavigate } from 'react-router-dom';
 
 const defaultMenuItems = [
@@ -36,6 +37,7 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
 
   const handleSignOut = () => {
     dispatch(clearUser());
+    dispatch(clearTransactions());
     window.localStorage.removeItem('trackitToken');
     window.localStorage.removeItem('trackitUser');
     navigate('/', { replace: true });
@@ -46,7 +48,7 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
       {/* Mobile Toggle */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className='fixed left-4 top-4 z-50 rounded-xl bg-slate-900/90 p-2 text-white shadow-lg backdrop-blur-sm lg:hidden'>
+        className='fixed left-0 top-4 z-50 rounded-xl bg-slate-900/90 p-2 text-white shadow-lg backdrop-blur-sm lg:hidden'>
         {isMobileOpen ? (
           <FiX className='h-6 w-6' />
         ) : (
@@ -71,7 +73,7 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
       <motion.aside
         animate={{ width: isOpen ? 240 : 80 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className='fixed left-0 top-16 z-40 hidden h-[calc(100vh-64px)] flex-col border-r border-slate-200/60 bg-white/95 backdrop-blur-xl dark:border-trackit-border/60 dark:bg-slate-900/95 lg:flex'>
+        className='fixed left-0 top-16 z-40 hidden h-[calc(100vh-64px)] flex-col border-r border-slate-200/60 bg-white/95 backdrop-blur-sm dark:border-trackit-border/60 dark:bg-slate-900/95 lg:flex'>
         {/* Navigation */}
         <nav className='flex-1 space-y-1 overflow-y-auto px-2 py-4'>
           {menuItems.map((item) => {
@@ -147,7 +149,7 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className='fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200/60 bg-white/95 backdrop-blur-xl dark:border-trackit-border/60 dark:bg-slate-900/95 lg:hidden'>
+            className='fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200/60 bg-white/95 backdrop-blur-sm dark:border-trackit-border/60 dark:bg-slate-900/95 lg:hidden'>
             {/* Logo */}
             <div className='flex h-16 items-center gap-3 border-b border-slate-200/60 px-6 dark:border-trackit-border/60'>
               <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-trackit-accent to-emerald-500'>

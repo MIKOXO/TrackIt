@@ -1,44 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FiTrendingUp, FiChevronLeft } from 'react-icons/fi'
 import { HiOutlineMoon, HiOutlineSun } from 'react-icons/hi'
-import { useSelector } from 'react-redux'
-
-const getInitialTheme = () => {
-  if (typeof window === 'undefined') {
-    return true
-  }
-
-  if (window.document.documentElement.classList.contains('dark')) {
-    return true
-  }
-
-  const storedPreference = window.localStorage.getItem('theme')
-  if (storedPreference === 'light') {
-    return false
-  }
-  if (storedPreference === 'dark') {
-    return true
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-}
+import { useSelector, useDispatch } from 'react-redux'
+import { toggleTheme } from '../../store/slices/themeSlice'
 
 const DashboardNavbar = ({ sidebarOpen, onToggleSidebar }) => {
-  const [isDark, setIsDark] = React.useState(getInitialTheme)
+  const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
-
-  React.useEffect(() => {
-    const root = window.document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
-    window.localStorage.setItem('theme', isDark ? 'dark' : 'light')
-  }, [isDark])
+  const theme = useSelector((state) => state.theme.mode)
+  const isDark = theme === 'dark'
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200/60 bg-white/95 backdrop-blur-xl dark:border-trackit-border/60 dark:bg-slate-900/95">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200/60 bg-white dark:border-trackit-border/60 dark:bg-slate-900">
       <nav className="flex items-center justify-between gap-4 px-6 py-4">
         {/* Left - Sidebar Toggle */}
         <button
@@ -64,7 +37,7 @@ const DashboardNavbar = ({ sidebarOpen, onToggleSidebar }) => {
         <div className="flex items-center gap-3 ml-auto">
           <button
             type="button"
-            onClick={() => setIsDark((prev) => !prev)}
+            onClick={() => dispatch(toggleTheme())}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/60 bg-white text-slate-500 transition hover:border-emerald-300 hover:text-emerald-500 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-400 dark:hover:text-emerald-400"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
