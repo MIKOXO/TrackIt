@@ -1,17 +1,82 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiCreditCard } from 'react-icons/fi'
-import { useSelector } from 'react-redux'
-
-const stats = [
-  { icon: FiDollarSign, label: 'Total Balance', value: '', change: '', trend: 'up' },
-  { icon: FiCreditCard, label: 'This Month', value: '', change: '', trend: 'down' },
-  { icon: FiTrendingUp, label: 'Income', value: '', change: '', trend: 'up' },
-  { icon: FiTrendingDown, label: 'Expenses', value: '', change: '', trend: 'down' },
-]
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchTransactions } from '../../store/slices/transactionSlice'
 
 const Overview = () => {
+  const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
+  const token = useSelector((state) => state.auth.token)
+  const { transactions } = useSelector((state) => state.transactions)
+
+  useEffect(() => {
+    if (token && transactions.length === 0) {
+      dispatch(fetchTransactions(token))
+    }
+  }, [token, dispatch, transactions.length])
+
+  const totalIncome = transactions
+    .filter((t) => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalExpenses = transactions
+    .filter((t) => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalBalance = totalIncome - totalExpenses
+
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+  const thisMonthTransactions = transactions.filter((t) => {
+    const date = new Date(t.date)
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear
+  })
+
+  const thisMonthTotal = thisMonthTransactions.reduce(
+    (sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount),
+    0
+  )
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value)
+  }
+
+  const stats = [
+    { 
+      icon: FiDollarSign, 
+      label: 'Total Balance', 
+      value: formatCurrency(totalBalance), 
+      change: '', 
+      trend: 'up' 
+    },
+    { 
+      icon: FiCreditCard, 
+      label: 'This Month', 
+      value: formatCurrency(thisMonthTotal), 
+      change: '', 
+      trend: thisMonthTotal >= 0 ? 'up' : 'down' 
+    },
+    { 
+      icon: FiTrendingUp, 
+      label: 'Income', 
+      value: formatCurrency(totalIncome), 
+      change: '', 
+      trend: 'up' 
+    },
+    { 
+      icon: FiTrendingDown, 
+      label: 'Expenses', 
+      value: formatCurrency(totalExpenses), 
+      change: '', 
+      trend: 'down' 
+    },
+  ]
+
+  const recentTransactions = transactions.slice(0, 5)
 
   return (
     <div className="space-y-8">
@@ -64,9 +129,39 @@ const Overview = () => {
         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Recent Activity</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Your latest transactions</p>
         
-        <div className="mt-6 text-center text-slate-600 dark:text-slate-400">
-          <p>No transactions yet</p>
-        </div>
+        {recentTransactions.length === 0 ? (
+          <div className="mt-6 text-center text-slate-600 dark:text-slate-400">
+            <p>No transactions yet</p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {recentTransactions.map((transaction) => (
+              <div
+                key={transaction._id}
+                className="flex items-center justify-between rounded-xl border border-slate-200/50 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                    {transaction.category}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {new Date(transaction.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <p
+                  className={`text-lg font-bold ${
+                    transaction.type === 'income'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {transaction.type === 'income' ? '+' : '-'}
+                  {formatCurrency(transaction.amount)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   )

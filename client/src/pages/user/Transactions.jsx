@@ -1,25 +1,131 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiSearch, FiFilter } from 'react-icons/fi'
+import { FiFilter, FiPlus, FiSearch } from 'react-icons/fi'
+import { useDispatch, useSelector } from 'react-redux'
+import AddTransactionModal from '../../components/user/AddTransactionModal.jsx'
+import LoadingIndicator from '../../components/ui/LoadingIndicator.jsx'
+import { useToast } from '../../components/ui/ToastProvider.jsx'
+import { fetchTransactions, addTransaction } from '../../store/slices/transactionSlice.js'
+import { getServerMessage } from '../../utils/errorUtils.js'
 
-const transactions = []
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+})
+
+const formatCurrency = (value) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return currencyFormatter.format(0)
+  }
+  return currencyFormatter.format(Number(value))
+}
+
+const formatDateLabel = (value) => {
+  if (!value) {
+    return '—'
+  }
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return '—'
+  }
+  return parsed.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 const Transactions = () => {
+  const dispatch = useDispatch()
+  const token = useSelector((state) => state.auth.token)
+  const { transactions, loading: isLoading } = useSelector((state) => state.transactions)
+  const { showToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
+  const [isModalOpen, setModalOpen] = useState(false)
+  const [isCreating, setCreating] = useState(false)
+
+  useEffect(() => {
+    if (!token) return
+    dispatch(fetchTransactions(token))
+      .unwrap()
+      .catch((error) => {
+        showToast(
+          getServerMessage({ response: { data: { message: error } } }, 'Unable to load transactions. Please refresh.'),
+          { type: 'error' }
+        )
+      })
+  }, [token, dispatch, showToast])
+
+  const filteredTransactions = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase()
+    if (!normalized) {
+      return transactions
+    }
+
+    return transactions.filter((transaction) => {
+      const haystack = [
+        transaction.category,
+        transaction.type,
+        transaction.description,
+        formatDateLabel(transaction.date),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return haystack.includes(normalized)
+    })
+  }, [searchTerm, transactions])
+
+  const handleCreateTransaction = async (payload) => {
+    if (!token) {
+      const message = 'Please sign in again before adding a transaction.'
+      showToast(message, { type: 'error' })
+      throw new Error(message)
+    }
+
+    setCreating(true)
+    try {
+      await dispatch(addTransaction({ payload, token })).unwrap()
+      showToast('Transaction saved to your ledger.', { type: 'success' })
+    } catch (error) {
+      const message = getServerMessage({ response: { data: { message: error } } }, 'Unable to save the transaction right now.')
+      showToast(message, { type: 'error' })
+      throw error
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const openModal = () => setModalOpen(true)
+  const closeModal = () => setModalOpen(false)
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-4 rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
       >
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Transactions</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">Track all your income and expenses</p>
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.5em] text-slate-400">Transactions</p>
+            <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-50">Track your money</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
+              Log income and expenses to keep the dashboard accurate and see trends over time.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openModal}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/60 bg-white px-5 py-3 text-sm font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 dark:border-trackit-border/60 dark:bg-slate-900/50 dark:text-slate-50"
+          >
+            <FiPlus className="h-4 w-4 stroke-[2]" />
+            Add transaction
+          </button>
+        </div>
       </motion.div>
 
-      {/* Search & Filter */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -31,7 +137,7 @@ const Transactions = () => {
             type="text"
             placeholder="Search transactions..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(event) => setSearchTerm(event.target.value)}
             className="w-full rounded-xl border border-slate-200/60 bg-white py-3 pl-12 pr-4 text-slate-900 placeholder-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50"
           />
         </div>
@@ -41,19 +147,76 @@ const Transactions = () => {
         </button>
       </motion.div>
 
-      {/* Transactions List */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         className="rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
       >
-        <div className="divide-y divide-slate-200/60 dark:divide-trackit-border/60">
-          <div className="p-6 text-center text-slate-600 dark:text-slate-400">
-            <p>No transactions yet</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-3 px-6 py-12 text-slate-500 dark:text-slate-300">
+            <LoadingIndicator />
+            <span>Loading transactions...</span>
           </div>
-        </div>
+        ) : filteredTransactions.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-6 py-12 text-center text-slate-500 dark:text-slate-300">
+            <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">No transactions yet</p>
+            <p className="max-w-sm text-sm text-slate-600 dark:text-slate-400">
+              Add a transaction to kick off your financial journey. Income, expenses, and savings are all welcome.
+            </p>
+            <button
+              type="button"
+              onClick={openModal}
+              className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-slate-200/60 bg-white px-5 py-2 text-sm font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 dark:border-trackit-border/60 dark:bg-slate-900/50 dark:text-slate-50"
+            >
+              <FiPlus className="h-4 w-4" />
+              Add my first transaction
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4 px-6 py-6">
+            {filteredTransactions.map((transaction) => {
+              const badgeClass =
+                transaction.type === 'income'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200'
+                  : 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-200'
+              return (
+                <div
+                  key={transaction._id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-200/50 bg-slate-50/50 p-5 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        {transaction.category}
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                        {formatCurrency(transaction.amount)}
+                      </p>
+                    </div>
+                    <span className={`rounded-2xl px-4 py-1 text-sm font-semibold ${badgeClass}`}>
+                      {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm text-slate-500 dark:text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+                    <p>{formatDateLabel(transaction.date)}</p>
+                    {transaction.description && (
+                      <p className="max-w-xl text-slate-600 dark:text-slate-400">{transaction.description}</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </motion.div>
+
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onCreate={handleCreateTransaction}
+        isSubmitting={isCreating}
+      />
     </div>
   )
 }
