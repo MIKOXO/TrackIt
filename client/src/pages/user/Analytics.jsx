@@ -4,6 +4,7 @@ import { FiPieChart } from 'react-icons/fi'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchAnalytics } from '../../store/slices/analyticsSlice'
 import { AnalyticsCharts } from '../../components/user/AnalyticsCharts'
+import SkeletonLoader from '../../components/ui/SkeletonLoader'
 import DropdownSelect from '../../components/ui/DropdownSelect'
 
 const Analytics = () => {
@@ -33,6 +34,12 @@ const Analytics = () => {
     { label: '24 months', value: 24 },
   ]
 
+  const summaryCards = [
+    { label: 'Income', value: formatCurrency(data?.totals?.income), accent: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Expenses', value: formatCurrency(data?.totals?.expense), accent: 'text-rose-600 dark:text-rose-400' },
+    { label: 'Net', value: formatCurrency(data?.totals?.net), accent: 'text-slate-900 dark:text-slate-50' },
+    { label: 'Range', value: `${months} months`, accent: 'text-slate-900 dark:text-slate-50' },
+  ]
 
   return (
     <div className="space-y-8">
@@ -65,45 +72,46 @@ const Analytics = () => {
         </div>
       </motion.div>
 
-      {/* Summary */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: 'Income', value: formatCurrency(data?.totals?.income), accent: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Expenses', value: formatCurrency(data?.totals?.expense), accent: 'text-rose-600 dark:text-rose-400' },
-            { label: 'Net', value: formatCurrency(data?.totals?.net), accent: 'text-slate-900 dark:text-slate-50' },
-            { label: 'Range', value: `${months} months`, accent: 'text-slate-900 dark:text-slate-50' },
-          ].map((card) => (
-            <div
-              key={card.label}
-              className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
-                  <FiPieChart className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+      {/* Content */}
+      {error ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-rose-200/60 bg-rose-50 p-6 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"
+        >
+          {error}
+        </motion.div>
+      ) : loading && !data ? (
+        <SkeletonLoader cardCount={4} gridCols="lg:grid-cols-4" showCharts={true} chartCount={3} />
+      ) : (
+        <>
+          {/* Summary */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryCards.map((card, index) => (
+              <motion.div
+                key={card.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                    <FiPieChart className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                  </div>
                 </div>
-              </div>
-              <p className={`mt-4 text-2xl font-bold ${card.accent}`}>{loading ? '...' : card.value}</p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{card.label}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+                <p className={`mt-4 text-2xl font-bold ${card.accent}`}>{card.value}</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{card.label}</p>
+              </motion.div>
+            ))}
+          </div>
 
-      {/* Charts */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        {error ? (
-          <div className="rounded-2xl border border-rose-200/60 bg-rose-50 p-6 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
-            {error}
-          </div>
-        ) : loading && !data ? (
-          <div className="rounded-2xl border border-slate-200/60 bg-white p-10 text-slate-600 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 dark:text-slate-400">
-            Loading analytics...
-          </div>
-        ) : (
-          <AnalyticsCharts analytics={data} isDark={isDark} />
-        )}
-      </motion.div>
+          {/* Charts */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <AnalyticsCharts analytics={data} isDark={isDark} />
+          </motion.div>
+        </>
+      )}
     </div>
   )
 }
