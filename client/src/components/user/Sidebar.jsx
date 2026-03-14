@@ -14,6 +14,7 @@ import {
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../store/slices/authSlice';
+import { clearAnalytics } from '../../store/slices/analyticsSlice';
 import { clearTransactions } from '../../store/slices/transactionSlice';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,6 +38,7 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
 
   const handleSignOut = () => {
     dispatch(clearUser());
+    dispatch(clearAnalytics())
     dispatch(clearTransactions());
     window.localStorage.removeItem('trackitToken');
     window.localStorage.removeItem('trackitUser');

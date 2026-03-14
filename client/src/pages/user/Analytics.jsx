@@ -1,40 +1,39 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiPieChart } from 'react-icons/fi'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchTransactions } from '../../store/slices/transactionSlice'
+import { fetchAnalytics } from '../../store/slices/analyticsSlice'
+import { AnalyticsCharts } from '../../components/user/AnalyticsCharts'
+import DropdownSelect from '../../components/ui/DropdownSelect'
 
 const Analytics = () => {
   const dispatch = useDispatch()
   const token = useSelector((state) => state.auth.token)
-  const { transactions } = useSelector((state) => state.transactions)
+  const isDark = useSelector((state) => state.theme.mode === 'dark')
+  const { data, loading, error } = useSelector((state) => state.analytics)
+  const [months, setMonths] = useState(6)
+  const [days] = useState(14)
 
   useEffect(() => {
-    if (token && transactions.length === 0) {
-      dispatch(fetchTransactions(token))
+    if (token) {
+      dispatch(fetchAnalytics({ token, months, days }))
     }
-  }, [token, dispatch, transactions.length])
+  }, [token, dispatch, months, days])
 
-  const categoryData = useMemo(() => {
-    const categoryTotals = {}
-    transactions
-      .filter((t) => t.type === 'expense')
-      .forEach((t) => {
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount
-      })
-    return Object.entries(categoryTotals)
-      .map(([category, amount]) => ({ category, amount }))
-      .sort((a, b) => b.amount - a.amount)
-  }, [transactions])
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value ?? 0)
 
-  const totalExpenses = categoryData.reduce((sum, item) => sum + item.amount, 0)
+  const rangeOptions = [
+    { label: '1 month', value: 1 },
+    { label: '3 months', value: 3 },
+    { label: '6 months', value: 6 },
+    { label: '9 months', value: 9 },
+    { label: '12 months', value: 12 },
+    { label: '18 months', value: 18 },
+    { label: '24 months', value: 24 },
+  ]
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
-  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -43,51 +42,68 @@ const Analytics = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">Visualize your spending patterns</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">
+              Trends and breakdowns, powered by your saved transactions
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Range</span>
+              <div className="w-44">
+                <DropdownSelect
+                  value={months}
+                  options={rangeOptions}
+                  onChange={(next) => setMonths(Number(next))}
+                  ariaLabel="Analytics range"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Chart Placeholder */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 rounded-2xl border border-slate-200/60 bg-white p-8 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
-      >
-        {categoryData.length === 0 ? (
-          <div className="flex h-64 items-center justify-center">
-            <p className="text-slate-600 dark:text-slate-400">No expense data available</p>
+      {/* Summary */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: 'Income', value: formatCurrency(data?.totals?.income), accent: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Expenses', value: formatCurrency(data?.totals?.expense), accent: 'text-rose-600 dark:text-rose-400' },
+            { label: 'Net', value: formatCurrency(data?.totals?.net), accent: 'text-slate-900 dark:text-slate-50' },
+            { label: 'Range', value: `${months} months`, accent: 'text-slate-900 dark:text-slate-50' },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <FiPieChart className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+              </div>
+              <p className={`mt-4 text-2xl font-bold ${card.accent}`}>{loading ? '...' : card.value}</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{card.label}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Charts */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        {error ? (
+          <div className="rounded-2xl border border-rose-200/60 bg-rose-50 p-6 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+            {error}
+          </div>
+        ) : loading && !data ? (
+          <div className="rounded-2xl border border-slate-200/60 bg-white p-10 text-slate-600 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 dark:text-slate-400">
+            Loading analytics...
           </div>
         ) : (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-              Spending by Category
-            </h3>
-            {categoryData.map((item) => {
-              const percentage = ((item.amount / totalExpenses) * 100).toFixed(1)
-              return (
-                <div key={item.category} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-900 dark:text-slate-50">
-                      {item.category}
-                    </span>
-                    <span className="text-slate-600 dark:text-slate-400">
-                      {formatCurrency(item.amount)} ({percentage}%)
-                    </span>
-                  </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-trackit-accent to-emerald-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <AnalyticsCharts analytics={data} isDark={isDark} />
         )}
       </motion.div>
-
-
     </div>
   )
 }
