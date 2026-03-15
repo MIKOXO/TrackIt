@@ -27,6 +27,7 @@ export const protect = async (req, res, next) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      currency: user.currency ?? 'ETB',
       role: user.role,
     };
     next();

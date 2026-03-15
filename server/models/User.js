@@ -13,6 +13,12 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  currency: {
+    type: String,
+    default: 'ETB',
+    uppercase: true,
+    trim: true,
+  },
   password: {
     type: String,
     required: true,
