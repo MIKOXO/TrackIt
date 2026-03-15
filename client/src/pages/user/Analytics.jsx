@@ -6,11 +6,13 @@ import { fetchAnalytics } from '../../store/slices/analyticsSlice'
 import { AnalyticsCharts } from '../../components/user/AnalyticsCharts'
 import SkeletonLoader from '../../components/ui/SkeletonLoader'
 import DropdownSelect from '../../components/ui/DropdownSelect'
+import { formatCurrency } from '../../utils/currencyUtils.js'
 
 const Analytics = () => {
   const dispatch = useDispatch()
   const token = useSelector((state) => state.auth.token)
   const isDark = useSelector((state) => state.theme.mode === 'dark')
+  const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { data, loading, error } = useSelector((state) => state.analytics)
   const [months, setMonths] = useState(6)
   const [days] = useState(14)
@@ -21,8 +23,7 @@ const Analytics = () => {
     }
   }, [token, dispatch, months, days])
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value ?? 0)
+  const formatMoney = (value) => formatCurrency(value, currency)
 
   const rangeOptions = [
     { label: '1 month', value: 1 },
@@ -35,9 +36,9 @@ const Analytics = () => {
   ]
 
   const summaryCards = [
-    { label: 'Income', value: formatCurrency(data?.totals?.income), accent: 'text-emerald-600 dark:text-emerald-400' },
-    { label: 'Expenses', value: formatCurrency(data?.totals?.expense), accent: 'text-rose-600 dark:text-rose-400' },
-    { label: 'Net', value: formatCurrency(data?.totals?.net), accent: 'text-slate-900 dark:text-slate-50' },
+    { label: 'Income', value: formatMoney(data?.totals?.income), accent: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Expenses', value: formatMoney(data?.totals?.expense), accent: 'text-rose-600 dark:text-rose-400' },
+    { label: 'Net', value: formatMoney(data?.totals?.net), accent: 'text-slate-900 dark:text-slate-50' },
     { label: 'Range', value: `${months} months`, accent: 'text-slate-900 dark:text-slate-50' },
   ]
 
@@ -108,7 +109,7 @@ const Analytics = () => {
 
           {/* Charts */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <AnalyticsCharts analytics={data} isDark={isDark} />
+            <AnalyticsCharts analytics={data} isDark={isDark} currency={currency} />
           </motion.div>
         </>
       )}

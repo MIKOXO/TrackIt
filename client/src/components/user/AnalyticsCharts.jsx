@@ -14,9 +14,7 @@ import {
   Pie,
   Cell,
 } from 'recharts'
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value ?? 0)
+import { formatCurrency } from '../../utils/currencyUtils.js'
 
 const formatCompactNumber = (value) =>
   new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value ?? 0)
@@ -34,7 +32,7 @@ const ChartCard = ({ title, subtitle, children, right }) => (
   </div>
 )
 
-const ChartTooltip = ({ active, payload, label, isDark, labelFormatter }) => {
+const ChartTooltip = ({ active, payload, label, isDark, labelFormatter, currency }) => {
   if (!active || !payload?.length) return null
   const bg = isDark ? 'bg-slate-950/95 border-slate-700/60' : 'bg-slate-900/95 border-slate-800/60'
   const fallbackLabel =
@@ -56,10 +54,10 @@ const ChartTooltip = ({ active, payload, label, isDark, labelFormatter }) => {
             <div key={key} className="flex items-center justify-between gap-6 text-xs">
             <span className="flex items-center gap-2 text-slate-300">
               <span className="h-2 w-2 rounded-full" style={{ background: swatch }} />
-              <span className="capitalize">{rowLabel}</span>
+            <span className="capitalize">{rowLabel}</span>
             </span>
             <span className="font-semibold text-slate-100">
-              {formatCurrency(row.value)}
+              {formatCurrency(row.value, currency)}
             </span>
             </div>
           )
@@ -69,7 +67,7 @@ const ChartTooltip = ({ active, payload, label, isDark, labelFormatter }) => {
   )
 }
 
-export const AnalyticsCharts = ({ analytics, isDark }) => {
+export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
   const [activeCategory, setActiveCategory] = useState(null)
 
   const palette = useMemo(
@@ -95,7 +93,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
     <div className="flex flex-col gap-2">
       <div className="text-right text-xs font-semibold text-slate-600 dark:text-slate-300">Top categories</div>
       <div className="text-right text-xs text-slate-500 dark:text-slate-400">
-        {activeCategory ? `${activeCategory.category}: ${formatCurrency(activeCategory.amount)}` : 'Hover slices'}
+        {activeCategory ? `${activeCategory.category}: ${formatCurrency(activeCategory.amount, currency)}` : 'Hover slices'}
       </div>
     </div>
   )
@@ -127,7 +125,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
                     tickFormatter={(v) => v.slice(5)}
                   />
                   <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={formatCompactNumber} />
-                  <Tooltip cursor={false} content={(props) => <ChartTooltip {...props} isDark={isDark} />} />
+                  <Tooltip cursor={false} content={(props) => <ChartTooltip {...props} isDark={isDark} currency={currency} />} />
                   <Legend />
                   <Bar dataKey="income" name="Income" fill="#22c55e" radius={[12, 12, 4, 4]} />
                   <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[12, 12, 4, 4]} />
@@ -148,7 +146,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Tooltip cursor={false} content={(props) => <ChartTooltip {...props} isDark={isDark} />} />
+                  <Tooltip cursor={false} content={(props) => <ChartTooltip {...props} isDark={isDark} currency={currency} />} />
                   <Pie
                     data={categories}
                     dataKey="amount"
@@ -178,7 +176,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200/60 bg-slate-50/60 px-4 py-3 text-sm dark:border-trackit-border/60 dark:bg-slate-900/50">
               <span className="text-slate-600 dark:text-slate-400">Total (top {categories.length})</span>
               <span className="font-semibold text-slate-900 dark:text-slate-50">
-                {formatCurrency(categoryTotal)}
+                {formatCurrency(categoryTotal, currency)}
               </span>
             </div>
           ) : null}
@@ -193,7 +191,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
             <div className="text-right">
               <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">Net</div>
               <div className="text-sm font-bold text-slate-900 dark:text-slate-50">
-                {formatCurrency(analytics?.totals?.net ?? 0)}
+                {formatCurrency(analytics?.totals?.net ?? 0, currency)}
               </div>
             </div>
           }
@@ -221,7 +219,7 @@ export const AnalyticsCharts = ({ analytics, isDark }) => {
                   <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={formatCompactNumber} />
                   <Tooltip
                     cursor={false}
-                    content={(props) => <ChartTooltip {...props} isDark={isDark} />}
+                    content={(props) => <ChartTooltip {...props} isDark={isDark} currency={currency} />}
                   />
                   <Legend />
                   <Area

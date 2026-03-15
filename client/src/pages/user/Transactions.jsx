@@ -7,18 +7,7 @@ import SkeletonLoader from '../../components/ui/SkeletonLoader.jsx'
 import { useToast } from '../../components/ui/ToastProvider.jsx'
 import { fetchTransactions, addTransaction } from '../../store/slices/transactionSlice.js'
 import { getServerMessage } from '../../utils/errorUtils.js'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
-
-const formatCurrency = (value) => {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return currencyFormatter.format(0)
-  }
-  return currencyFormatter.format(Number(value))
-}
+import { formatCurrency } from '../../utils/currencyUtils.js'
 
 const formatDateLabel = (value) => {
   if (!value) {
@@ -38,11 +27,13 @@ const formatDateLabel = (value) => {
 const Transactions = () => {
   const dispatch = useDispatch()
   const token = useSelector((state) => state.auth.token)
+  const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { transactions, loading: isLoading } = useSelector((state) => state.transactions)
   const { showToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setModalOpen] = useState(false)
   const [isCreating, setCreating] = useState(false)
+  const formatMoney = (value) => formatCurrency(value, currency)
 
   useEffect(() => {
     if (!token) return
@@ -190,7 +181,7 @@ const Transactions = () => {
                             {transaction.category}
                           </p>
                           <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-                            {formatCurrency(transaction.amount)}
+                            {formatMoney(transaction.amount)}
                           </p>
                         </div>
                         <span className={`rounded-2xl px-4 py-1 text-sm font-semibold ${badgeClass}`}>

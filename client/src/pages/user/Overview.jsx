@@ -4,11 +4,13 @@ import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiCreditCard } from 'react-
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchTransactions } from '../../store/slices/transactionSlice'
 import SkeletonLoader from '../../components/ui/SkeletonLoader'
+import { formatCurrency } from '../../utils/currencyUtils.js'
 
 const Overview = () => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const token = useSelector((state) => state.auth.token)
+  const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { transactions, loading } = useSelector((state) => state.transactions)
 
   useEffect(() => {
@@ -39,39 +41,34 @@ const Overview = () => {
     0
   )
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
-  }
+  const formatMoney = (value) => formatCurrency(value, currency)
 
   const stats = [
     { 
       icon: FiDollarSign, 
       label: 'Total Balance', 
-      value: formatCurrency(totalBalance), 
+      value: formatMoney(totalBalance), 
       change: '', 
       trend: 'up' 
     },
     { 
       icon: FiCreditCard, 
       label: 'This Month', 
-      value: formatCurrency(thisMonthTotal), 
+      value: formatMoney(thisMonthTotal), 
       change: '', 
       trend: thisMonthTotal >= 0 ? 'up' : 'down' 
     },
     { 
       icon: FiTrendingUp, 
       label: 'Income', 
-      value: formatCurrency(totalIncome), 
+      value: formatMoney(totalIncome), 
       change: '', 
       trend: 'up' 
     },
     { 
       icon: FiTrendingDown, 
       label: 'Expenses', 
-      value: formatCurrency(totalExpenses), 
+      value: formatMoney(totalExpenses), 
       change: '', 
       trend: 'down' 
     },
@@ -161,7 +158,7 @@ const Overview = () => {
                       }`}
                     >
                       {transaction.type === 'income' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
+                      {formatMoney(transaction.amount)}
                     </p>
                   </div>
                 ))}
