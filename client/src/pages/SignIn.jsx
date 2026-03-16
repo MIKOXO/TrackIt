@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi'
 import { HiOutlineSparkles } from 'react-icons/hi'
 import { setUser, setLoading, setError } from '../store/slices/authSlice'
@@ -11,6 +11,38 @@ import { login } from '../services/authService.js'
 import { useToast } from '../components/ui/ToastProvider.jsx'
 import { getServerMessage } from '../utils/errorUtils.js'
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx'
+
+const SuspendedAccountModal = ({ open, heading, message, onClose }) => (
+  <AnimatePresence>
+    {open ? (
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-2xl shadow-black/40 dark:border-trackit-border dark:bg-slate-900"
+          initial={{ y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 16, opacity: 0 }}
+        >
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{heading}</h3>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{message}</p>
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-trackit-border dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    ) : null}
+  </AnimatePresence>
+)
 
 const SignIn = () => {
   const dispatch = useDispatch()
@@ -28,6 +60,7 @@ const SignIn = () => {
     email: false,
     password: false,
   })
+  const [suspendedModal, setSuspendedModal] = useState({ open: false, message: '', heading: 'Account suspended' })
 
   const inputBaseClasses =
     'w-full rounded-xl border bg-white/80 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm shadow-black/5 transition focus:outline-none dark:bg-slate-900/60 dark:text-slate-50 dark:placeholder-slate-500'
@@ -59,6 +92,7 @@ const SignIn = () => {
     dispatch(setError(null))
     setFieldErrors({ email: false, password: false })
     setIsSubmitting(true)
+    setSuspendedModal({ open: false, message: '' })
 
     try {
       const response = await login({
@@ -74,6 +108,13 @@ const SignIn = () => {
       dispatch(setError(message))
       showToast(message, { type: 'error' })
       const normalized = message.toLowerCase()
+      if (/suspend|delete/i.test(normalized)) {
+        setSuspendedModal({
+          open: true,
+          message,
+          heading: /delete/i.test(normalized) ? 'Account deleted' : 'Account suspended',
+        })
+      }
       const credentialHint = /credentials|invalid/i.test(normalized)
       setFieldErrors({
         email: /email|user/i.test(normalized) || credentialHint,
@@ -296,6 +337,13 @@ const SignIn = () => {
           </div>
         </div>
       </main>
+
+      <SuspendedAccountModal
+        open={suspendedModal.open}
+        heading={suspendedModal.heading}
+        message={suspendedModal.message}
+        onClose={() => setSuspendedModal({ open: false, message: '', heading: 'Account suspended' })}
+      />
 
       <Footer />
     </div>
