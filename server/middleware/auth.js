@@ -22,6 +22,9 @@ export const protect = async (req, res, next) => {
     if (!user) {
       return next({ status: 401, message: 'User not found for given token.' });
     }
+    if (user.status === 'suspended') {
+      return next({ status: 403, message: 'User account is suspended.' });
+    }
 
     req.user = {
       id: user._id,
@@ -34,4 +37,11 @@ export const protect = async (req, res, next) => {
   } catch (error) {
     next({ status: 401, message: 'Invalid or expired authentication token.' });
   }
+};
+
+export const adminOnly = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return next({ status: 403, message: 'Admin access required.' });
+  }
+  next();
 };

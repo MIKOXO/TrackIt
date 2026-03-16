@@ -120,7 +120,17 @@ export const login = async (req, res, next) => {
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return next({ status: 401, message: 'Invalid credentials.' });
+      return next({
+        status: 404,
+        message: 'This account was deleted. Please contact mikeadmin@gmail.com for assistance.',
+      });
+    }
+
+    if (user.status === 'suspended') {
+      return next({
+        status: 403,
+        message: 'Your account has been suspended. Contact mikeadmin@gmail.com for more info.',
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
