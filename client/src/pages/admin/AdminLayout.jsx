@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { FiActivity, FiBarChart2, FiHome, FiSettings, FiUsers } from 'react-icons/fi'
+import { FiActivity, FiFileText, FiHome, FiSettings, FiUsers } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { toggleSidebar } from '../../store/slices/layoutSlice'
 import Navbar from '../../components/layout/Navbar.jsx'
@@ -10,11 +10,11 @@ import DashboardNavbar from '../../components/user/DashboardNavbar.jsx'
 import Sidebar from '../../components/user/Sidebar.jsx'
 
 const adminSidebarItems = [
-  { icon: FiHome, label: 'Command center', path: '/admin/dashboard' },
-  { icon: FiUsers, label: 'User oversight', path: '/admin/users' },
-  { icon: FiActivity, label: 'System health', path: '/admin/system-health' },
-  { icon: FiBarChart2, label: 'Reports', path: '/admin/reports' },
-  { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
+  { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard', header: 'Dashboard' },
+  { icon: FiUsers, label: 'User management', path: '/admin/users', header: 'User management' },
+  { icon: FiActivity, label: 'System health', path: '/admin/system-health', header: 'System health' },
+  { icon: FiFileText, label: 'Audit logs', path: '/admin/audit-logs', header: 'Audit logs' },
+  { icon: FiSettings, label: 'Settings', path: '/admin/settings', header: 'Settings' },
 ]
 
 const headerAnimation = {
@@ -72,6 +72,8 @@ const AdminLayout = () => {
   }
 
   const location = useLocation()
+  const currentPage = adminSidebarItems.find((item) => item.path === location.pathname)
+  const pageHeader = currentPage?.header || 'Dashboard'
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-trackit-background dark:text-slate-50 relative overflow-x-hidden">
@@ -86,17 +88,7 @@ const AdminLayout = () => {
           animate="visible"
         >
           <div className="flex flex-col gap-2">
-            <p className="text-xs uppercase tracking-[0.5em] text-slate-500 dark:text-slate-400">Administrator dashboard</p>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Command center</h1>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-              <span>Signed in as {user?.name}</span>
-              <span className="rounded-full border border-emerald-200 px-3 py-0.5 text-[0.65rem] uppercase tracking-[0.3em] text-emerald-600">
-                {user?.role}
-              </span>
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Coordinate teams, oversee policies, and keep the platform resilient.
-            </p>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">{pageHeader}</h1>
           </div>
         </motion.section>
 

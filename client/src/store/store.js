@@ -4,6 +4,7 @@ import analyticsReducer from './slices/analyticsSlice'
 import layoutReducer from './slices/layoutSlice'
 import transactionReducer from './slices/transactionSlice'
 import themeReducer from './slices/themeSlice'
+import adminReducer from './slices/adminSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     layout: layoutReducer,
     transactions: transactionReducer,
     theme: themeReducer,
+    admin: adminReducer,
   },
 })

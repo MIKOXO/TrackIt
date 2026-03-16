@@ -2,17 +2,9 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { FiBarChart2, FiCalendar } from 'react-icons/fi'
 
-const reportSchedule = [
-  { title: 'Weekly health brief', cadence: 'Weekly', channel: 'Email + Slack', owner: 'Reliability', time: 'Mon · 08:00' },
-  { title: 'User behavior pulse', cadence: 'Bi-weekly', channel: 'Dashboard banner', owner: 'Insights', time: 'Thu · 13:00' },
-  { title: 'Incident recap', cadence: 'Daily', channel: 'Email', owner: 'Platform', time: 'Daily · 16:00' },
-]
+const reportSchedule = []
 
-const insightSignals = [
-  { label: 'Transactions processed', value: '95K', trend: '+9% vs last cycle' },
-  { label: 'Fraud deflection rate', value: '0.38%', trend: 'Stable' },
-  { label: 'Support SLA', value: '98.4%', trend: '+1.1 pts' },
-]
+const insightSignals = []
 
 const reportVariant = {
   hidden: { opacity: 0, y: 12 },
