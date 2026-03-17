@@ -1,30 +1,33 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiActivity, FiAlertTriangle, FiDatabase, FiRefreshCw, FiServer } from 'react-icons/fi'
+import { FiActivity, FiDatabase, FiRefreshCw, FiServer, FiShield, FiUsers, FiZap } from 'react-icons/fi'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchDashboardStats } from '../../store/slices/adminSlice.js'
+import SkeletonLoader from '../../components/ui/SkeletonLoader.jsx'
 
 const sectionVariant = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
 }
 
-const buildSeries = (base, jitter) => []
+const RANGE_LABELS = {
+  '1h': 'Last hour',
+  '24h': 'Last 24 hours',
+  '7d': 'Last week',
+}
 
-const SERIES = {
-  '1h': {
-    volume: buildSeries(1200, 140),
-    latency: buildSeries(180, 35),
-    errors: buildSeries(1.2, 0.6),
-  },
-  '24h': {
-    volume: buildSeries(980, 260),
-    latency: buildSeries(210, 55),
-    errors: buildSeries(1.6, 0.8),
-  },
-  '7d': {
-    volume: buildSeries(760, 320),
-    latency: buildSeries(240, 65),
-    errors: buildSeries(1.9, 0.9),
-  },
+const THROUGHPUT_SUFFIX = {
+  '1h': 'min',
+  '24h': 'hr',
+  '7d': 'day',
+}
+
+const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+
+const DEPENDENCY_ICONS = {
+  MongoDB: FiDatabase,
+  'Auth middleware': FiShield,
+  'Background jobs': FiZap,
 }
 
 const toPath = (values, { width, height, padding = 6 }) => {
@@ -34,9 +37,10 @@ const toPath = (values, { width, height, padding = 6 }) => {
   const span = Math.max(1e-6, max - min)
   const innerW = width - padding * 2
   const innerH = height - padding * 2
+  const divisor = Math.max(values.length - 1, 1)
 
   const points = values.map((value, index) => {
-    const x = padding + (index / (values.length - 1)) * innerW
+    const x = padding + (index / divisor) * innerW
     const y = padding + (1 - (value - min) / span) * innerH
     return [x, y]
   })
@@ -78,23 +82,90 @@ const StatCard = ({ label, value, note, icon: Icon }) => (
 )
 
 const SystemHealth = () => {
+  const dispatch = useDispatch()
+  const { token } = useSelector((state) => state.auth)
+  const { dashboard } = useSelector((state) => state.admin)
+  const { data: dashboardData, loading, error } = dashboard
   const [range, setRange] = useState('24h')
-  const series = SERIES[range]
+  const [cachedData, setCachedData] = useState(null)
 
-  const summary = useMemo(() => {
-    const avg = (arr) => arr.reduce((a, b) => a + b, 0) / Math.max(1, arr.length)
-    const p95 = (arr) => {
-      const sorted = [...arr].sort((a, b) => a - b)
-      return sorted[Math.floor(sorted.length * 0.95)]
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchDashboardStats({ token }))
     }
-    return {
-      volumeAvg: Math.round(avg(series.volume)),
-      latencyP95: Math.round(p95(series.latency)),
-      errorsAvg: avg(series.errors).toFixed(2),
-    }
-  }, [series])
+  }, [dispatch, token])
 
-  const dependencies = []
+  useEffect(() => {
+    if (dashboardData) {
+      setCachedData(dashboardData)
+    }
+  }, [dashboardData])
+
+  const dataToShow = cachedData || dashboardData
+  const systemHealth = dataToShow?.systemHealth
+  const rangeData = systemHealth?.ranges?.[range]
+
+  const summary = useMemo(() => ({
+    throughputAvg: rangeData?.summary?.throughputAvg ?? 0,
+    avgAmount: rangeData?.summary?.avgAmount ?? 0,
+    uniqueUsers: rangeData?.summary?.uniqueUsers ?? 0,
+    totalTransactions: rangeData?.summary?.totalTransactions ?? 0,
+  }), [rangeData])
+
+  const isInitialLoading = loading && !dataToShow
+  const isErrored = error && !dataToShow
+
+  if (isInitialLoading) {
+    return (
+      <SkeletonLoader cardCount={3} gridCols="md:grid-cols-3" showCharts chartCount={3} cardHeight="h-40" />
+    )
+  }
+
+  if (isErrored) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
+        <p className="text-rose-700 dark:text-rose-200">Error loading system telemetry: {error}</p>
+        <button
+          onClick={() => dispatch(fetchDashboardStats({ token }))}
+          className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
+  const chartPanels = [
+    {
+      title: 'Transactions',
+      subtitle: 'Interval count',
+      values: rangeData?.series?.throughput ?? [],
+      accent: 'emerald',
+      footer: `${summary.totalTransactions.toLocaleString()} transactions ${RANGE_LABELS[range]?.toLowerCase()}`,
+    },
+    {
+      title: 'Average size',
+      subtitle: 'USD per transaction',
+      values: rangeData?.series?.avgAmount ?? [],
+      accent: 'amber',
+      footer: `${CURRENCY_FORMATTER.format(summary.avgAmount)} average`,
+    },
+    {
+      title: 'Unique users',
+      subtitle: 'Users per interval',
+      values: rangeData?.series?.uniqueUsers ?? [],
+      accent: 'rose',
+      footer: `${summary.uniqueUsers.toLocaleString()} unique users ${RANGE_LABELS[range]?.toLowerCase()}`,
+    },
+  ]
+
+  const dependencies = systemHealth?.dependencies ?? []
+  const lastUpdatedRaw = systemHealth?.lastUpdated || dataToShow?.metadata?.lastUpdated
+  const lastUpdatedDate = lastUpdatedRaw ? new Date(lastUpdatedRaw) : null
+  const lastUpdatedLabel =
+    lastUpdatedDate && !Number.isNaN(lastUpdatedDate.getTime())
+      ? lastUpdatedDate.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+      : 'not available'
 
   return (
     <motion.div
@@ -103,69 +174,82 @@ const SystemHealth = () => {
       animate="visible"
       variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
     >
+      {error && dataToShow && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm shadow-black/5 dark:border-rose-500/30 dark:bg-rose-500/10">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p>Error refreshing data: {error}</p>
+            <button
+              type="button"
+              onClick={() => dispatch(fetchDashboardStats({ token }))}
+              className="rounded-xl border border-rose-200 bg-white px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-black/5 dark:border-trackit-border dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">System health</p>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Live telemetry (mock)</h2>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Live telemetry</h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Track request volume, latency, and error rate over time ranges.
+            Tracking throughput, average size, and user activity from persisted transactions. Showing {RANGE_LABELS[range]?.toLowerCase()}.
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-trackit-border dark:bg-slate-950">
-          {[
-            { id: '1h', label: '1h' },
-            { id: '24h', label: '24h' },
-            { id: '7d', label: '7d' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setRange(item.id)}
-              className={[
-                'rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
-                range === item.id
-                  ? 'bg-emerald-600 text-white shadow shadow-emerald-600/20'
-                  : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900/40',
-              ].join(' ')}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-trackit-border dark:bg-slate-950">
+            {['1h', '24h', '7d'].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setRange(item)}
+                className={[
+                  'rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
+                  range === item
+                    ? 'bg-emerald-600 text-white shadow shadow-emerald-600/20'
+                    : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900/40',
+                ].join(' ')}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => dispatch(fetchDashboardStats({ token }))}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 shadow-sm shadow-black/5 transition hover:border-slate-300 hover:text-slate-800 disabled:cursor-wait disabled:opacity-60 dark:border-trackit-border dark:bg-slate-900/50 dark:text-slate-300 dark:hover:border-slate-600"
+          >
+            <FiRefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </button>
         </div>
       </section>
 
       <section className="grid gap-6 md:grid-cols-3">
         <StatCard
           label="Avg throughput"
-          value={`${summary.volumeAvg.toLocaleString()}/min`}
-          note={`Range: last ${range}`}
+          value={`${summary.throughputAvg.toLocaleString()}/${THROUGHPUT_SUFFIX[range]}`}
+          note={`Range: ${RANGE_LABELS[range]}`}
           icon={FiActivity}
         />
-        <StatCard label="p95 latency" value={`${summary.latencyP95} ms`} note="API response time" icon={FiServer} />
-        <StatCard label="Avg error rate" value={`${summary.errorsAvg}%`} note="5xx + auth failures" icon={FiAlertTriangle} />
+        <StatCard
+          label="Avg transaction size"
+          value={CURRENCY_FORMATTER.format(summary.avgAmount)}
+          note="Range average"
+          icon={FiServer}
+        />
+        <StatCard
+          label="Unique users"
+          value={summary.uniqueUsers.toLocaleString()}
+          note={`Range: ${RANGE_LABELS[range]}`}
+          icon={FiUsers}
+        />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
-        {[
-          {
-            title: 'Request volume',
-            subtitle: 'Requests per minute',
-            values: series.volume,
-            accent: 'emerald',
-          },
-          {
-            title: 'Latency trend',
-            subtitle: 'p50–p95 drift indicator',
-            values: series.latency,
-            accent: 'amber',
-          },
-          {
-            title: 'Error rate',
-            subtitle: 'Percent failures',
-            values: series.errors,
-            accent: 'rose',
-          },
-        ].map((panel) => (
+        {chartPanels.map((panel) => (
           <motion.article
             key={panel.title}
             className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-black/5 dark:border-trackit-border dark:bg-slate-900/30"
@@ -182,7 +266,7 @@ const SystemHealth = () => {
               <MiniLineChart values={panel.values} accent={panel.accent} />
             </div>
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Mock chart · wired to backend metrics later.
+              {panel.footer}
             </p>
           </motion.article>
         ))}
@@ -194,35 +278,45 @@ const SystemHealth = () => {
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Dependencies</p>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Service posture</h3>
           </div>
-          <span className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Live</span>
+          <div className="flex items-center gap-2">
+            {loading && <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Live</span>
+          </div>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {dependencies.map((dep) => (
-            <motion.article
-              key={dep.name}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm shadow-black/5 dark:border-trackit-border dark:bg-slate-950"
-              variants={sectionVariant}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <dep.icon className="h-5 w-5 text-emerald-500 dark:text-emerald-300" />
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{dep.name}</p>
+          {dependencies.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Dependency status is initializing.</p>
+          )}
+          {dependencies.map((dep) => {
+            const Icon = DEPENDENCY_ICONS[dep.name] || FiServer
+            return (
+              <motion.article
+                key={dep.name}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm shadow-black/5 dark:border-trackit-border dark:bg-slate-950"
+                variants={sectionVariant}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-emerald-500 dark:text-emerald-300" />
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{dep.name}</p>
+                  </div>
+                  <span
+                    className={[
+                      'rounded-full border px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em]',
+                      dep.status === 'Healthy'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
+                        : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
+                    ].join(' ')}
+                  >
+                    {dep.status}
+                  </span>
                 </div>
-                <span
-                  className={[
-                    'rounded-full border px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em]',
-                    dep.status === 'Healthy'
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
-                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
-                  ].join(' ')}
-                >
-                  {dep.status}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{dep.detail}</p>
-            </motion.article>
-          ))}
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{dep.detail}</p>
+              </motion.article>
+            )
+          })}
         </div>
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">Last updated: {lastUpdatedLabel}</p>
       </section>
     </motion.div>
   )
