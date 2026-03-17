@@ -30,11 +30,11 @@ export const getDashboardStats = async (req, res, next) => {
     // Get total users
     const totalUsers = await User.countDocuments();
 
-    // Get recent user activities (last 10 transactions with user info)
+    // Get recent user activities (last 5 transactions with user info)
     const recentActivities = await Transaction.find()
       .populate('user', 'name email')
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .select('amount type category description createdAt user');
 
     // Format recent activities
