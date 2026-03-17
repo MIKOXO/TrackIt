@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { FiActivity, FiFileText, FiHome, FiSettings, FiUsers } from 'react-icons/fi'
+import { FiActivity, FiHome, FiUsers } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { toggleSidebar } from '../../store/slices/layoutSlice'
 import Navbar from '../../components/layout/Navbar.jsx'
@@ -13,8 +13,6 @@ const adminSidebarItems = [
   { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard', header: 'Dashboard' },
   { icon: FiUsers, label: 'User management', path: '/admin/users', header: 'User management' },
   { icon: FiActivity, label: 'System health', path: '/admin/system-health', header: 'System health' },
-  { icon: FiFileText, label: 'Audit logs', path: '/admin/audit-logs', header: 'Audit logs' },
-  { icon: FiSettings, label: 'Settings', path: '/admin/settings', header: 'Settings' },
 ]
 
 const headerAnimation = {

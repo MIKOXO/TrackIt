@@ -7,8 +7,6 @@ import AdminDashboard from './pages/admin/Dashboard.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import UserOversight from './pages/admin/UserOversight.jsx'
 import SystemHealth from './pages/admin/SystemHealth.jsx'
-import AuditLogs from './pages/admin/AuditLogs.jsx'
-import AdminSettings from './pages/admin/Settings.jsx'
 import UserLayout from './pages/user/UserLayout.jsx'
 import Overview from './pages/user/Overview.jsx'
 import Transactions from './pages/user/Transactions.jsx'
@@ -43,9 +41,7 @@ const App = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserOversight />} />
           <Route path="system-health" element={<SystemHealth />} />
-          <Route path="reports" element={<Navigate replace to="/admin/audit-logs" />} />
-          <Route path="audit-logs" element={<AuditLogs />} />
-          <Route path="settings" element={<AdminSettings />} />
+          <Route path="reports" element={<Navigate replace to="/admin/dashboard" />} />
         </Route>
         <Route path="*" element={<NotFound />} />
         </Routes>
