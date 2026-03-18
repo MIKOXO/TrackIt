@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiChevronDown, FiX } from 'react-icons/fi';
 import LoadingIndicator from '../ui/LoadingIndicator.jsx';
+import { getPrimaryButtonClass } from '../ui/buttonStyles.js';
 import { useToast } from '../ui/ToastProvider.jsx';
 
 const INCOME_CATEGORIES = ['Salary', 'Freelance'];
@@ -43,18 +44,6 @@ const getTransactionButtonClass = (isActive) =>
       ? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:border-emerald-400/70 dark:bg-emerald-500/20 dark:text-emerald-100'
       : 'border-slate-200/60 bg-slate-50/70 text-slate-600 hover:bg-slate-100 dark:border-slate-700/60 dark:bg-slate-800/30 dark:text-slate-400 dark:hover:bg-slate-800/50'
   }`;
-
-const PRIMARY_BUTTON_BASE =
-  'relative inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300';
-
-const getPrimaryButtonClass = (disabled) =>
-  [
-    PRIMARY_BUTTON_BASE,
-    disabled
-      ? 'from-slate-500 via-slate-500 to-slate-600'
-      : 'from-trackit-accent to-emerald-500 hover:shadow-xl',
-    'disabled:cursor-not-allowed disabled:opacity-80 disabled:shadow-none disabled:text-slate-200',
-  ].join(' ');
 
 const CATEGORY_DROPDOWN_BUTTON = getFormInputClass('flex items-center justify-between');
 

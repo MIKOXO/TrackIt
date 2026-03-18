@@ -13,7 +13,11 @@ import Transactions from './pages/user/Transactions.jsx'
 import Analytics from './pages/user/Analytics.jsx'
 import Settings from './pages/user/Settings.jsx'
 import AIAssistant from './pages/user/AIAssistant.jsx'
+import SecurityQuestion from './pages/user/SecurityQuestion.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import RoleGate from './components/auth/RoleGate.jsx'
+import SecurityGate from './components/auth/SecurityGate.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 const App = () => {
@@ -23,10 +27,14 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           element={
             <RoleGate allowedRoles={['user']} redirectTo="/admin/dashboard">
-              <UserLayout />
+              <SecurityGate>
+                <UserLayout />
+              </SecurityGate>
             </RoleGate>
           }
         >
@@ -35,6 +43,7 @@ const App = () => {
           <Route path="/dashboard/analytics" element={<Analytics />} />
           <Route path="/dashboard/ai-assistant" element={<AIAssistant />} />
           <Route path="/dashboard/settings" element={<Settings />} />
+          <Route path="/security-question" element={<SecurityQuestion />} />
         </Route>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate replace to="dashboard" />} />

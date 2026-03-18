@@ -11,34 +11,7 @@ import { register } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
-
-const PASSWORD_REQUIREMENTS = [
-  {
-    id: 'length',
-    label: 'At least 10 characters',
-    test: (value) => value.length >= 10,
-  },
-  {
-    id: 'uppercase',
-    label: 'One uppercase letter',
-    test: (value) => /[A-Z]/.test(value),
-  },
-  {
-    id: 'lowercase',
-    label: 'One lowercase letter',
-    test: (value) => /[a-z]/.test(value),
-  },
-  {
-    id: 'number',
-    label: 'One number',
-    test: (value) => /[0-9]/.test(value),
-  },
-  {
-    id: 'special',
-    label: 'One symbol (e.g. !@#$%)',
-    test: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value),
-  },
-]
+import { PASSWORD_REQUIREMENTS } from '../constants/passwordRequirements.js';
 
 const SignUp = () => {
   const dispatch = useDispatch();
@@ -140,7 +113,7 @@ const SignUp = () => {
         setUser({ user: response.data.user, token: response.data.token }),
       );
       showToast('Account created successfully', { type: 'success' });
-      navigate('/dashboard', { replace: true });
+      navigate('/security-question', { replace: true });
     } catch (err) {
       const message = getServerMessage(err, 'Unable to create account. Try again shortly.');
       dispatch(setError(message));

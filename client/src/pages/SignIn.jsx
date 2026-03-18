@@ -50,7 +50,6 @@ const SignIn = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -76,10 +75,10 @@ const SignIn = () => {
   const showSignInLoading = isSubmitting || loading
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }))
     if (name === 'email' || name === 'password') {
       setFieldErrors((prev) => ({ ...prev, [name]: false }))
@@ -102,7 +101,11 @@ const SignIn = () => {
       dispatch(setUser({ user: response.data.user, token: response.data.token }))
       showToast('Signed in successfully', { type: 'success' })
       const destination = response.data.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'
-      navigate(destination, { replace: true })
+      const finalDestination =
+        response.data.user?.role !== 'admin' && !response.data.user?.securityQuestionSet
+          ? '/security-question'
+          : destination
+      navigate(finalDestination, { replace: true })
     } catch (err) {
       const message = getServerMessage(err, 'Unable to sign in. Check your credentials.')
       dispatch(setError(message))
@@ -219,24 +222,12 @@ const SignIn = () => {
                   transition={{ duration: 0.4, delay: 0.2 }}
                   className="flex items-center justify-between"
                 >
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 dark:border-slate-600"
-                    />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      Remember me
-                    </span>
-                  </label>
-                  <a
-                    href="#"
-                    className="text-sm font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
-                  >
-                    Forgot password?
-                  </a>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                >
+                  Forgot password?
+                </Link>
                 </motion.div>
 
                 {/* Submit Button */}

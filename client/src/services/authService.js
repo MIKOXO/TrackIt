@@ -22,3 +22,25 @@ export const changePassword = (payload, token) => {
   }
   return apiClient.put('/api/auth/password', payload, withAuthHeader(token));
 };
+
+export const setSecurityQuestion = (payload, token) => {
+  if (!token) {
+    return Promise.reject(new Error('Authentication token is required.'));
+  }
+  return apiClient.post('/api/auth/security-question', payload, withAuthHeader(token));
+};
+
+export const fetchSecurityQuestionForEmail = (email) => {
+  if (!email?.trim()) {
+    return Promise.reject(new Error('Email is required.'));
+  }
+  return apiClient.post('/api/auth/forgot-password/question', { email: email.trim() });
+};
+
+export const verifySecurityQuestionAnswer = (payload) => {
+  return apiClient.post('/api/auth/forgot-password', payload);
+};
+
+export const resetPasswordWithToken = (payload) => {
+  return apiClient.post('/api/auth/reset-password', payload);
+};
