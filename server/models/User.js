@@ -36,6 +36,22 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  securityQuestionId: {
+    type: Number,
+    default: null,
+  },
+  securityQuestionHash: {
+    type: String,
+    select: false,
+  },
+  securityAnswer: {
+    type: String,
+    select: false,
+  },
+  securityQuestionSet: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

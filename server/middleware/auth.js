@@ -32,6 +32,7 @@ export const protect = async (req, res, next) => {
       email: user.email,
       currency: user.currency ?? 'ETB',
       role: user.role,
+      securityQuestionSet: Boolean(user.securityQuestionSet),
     };
     next();
   } catch (error) {

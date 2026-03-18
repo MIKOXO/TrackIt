@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import SECURITY_QUESTIONS from '../constants/securityQuestions.js';
 
 const SUPPORTED_CURRENCIES = new Set([
   'USD',
@@ -66,6 +67,15 @@ const generateToken = (payload) => {
   });
 };
 
+const buildUserPayload = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  currency: user.currency ?? 'ETB',
+  role: user.role,
+  securityQuestionSet: Boolean(user.securityQuestionSet),
+});
+
 export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -96,11 +106,7 @@ export const register = async (req, res, next) => {
     res.status(201).json({
       token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        currency: user.currency ?? 'ETB',
-        role: user.role,
+        ...buildUserPayload(user),
       },
     });
   } catch (error) {
@@ -141,13 +147,7 @@ export const login = async (req, res, next) => {
     const token = generateToken({ userId: user._id, role: user.role });
     res.json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        currency: user.currency ?? 'ETB',
-        role: user.role,
-      },
+      user: buildUserPayload(user),
     });
   } catch (error) {
     next(error);
@@ -166,6 +166,7 @@ export const getCurrentUser = (req, res) => {
       email: req.user.email,
       currency: req.user.currency ?? 'ETB',
       role: req.user.role,
+      securityQuestionSet: Boolean(req.user.securityQuestionSet),
     },
   });
 };
@@ -231,13 +232,7 @@ export const updateCurrentUser = async (req, res, next) => {
     }
 
     res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        currency: user.currency ?? 'ETB',
-        role: user.role,
-      },
+      user: buildUserPayload(user),
     });
   } catch (error) {
     next(error);
@@ -282,10 +277,185 @@ export const changePassword = async (req, res, next) => {
       return next({ status: 401, message: 'Current password is incorrect.' });
     }
 
+    const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsOld) {
+      return next({ status: 400, message: 'New password must differ from the current password.' });
+    }
+
     user.password = await bcrypt.hash(newPassword, 12);
     await user.save();
 
     res.json({ message: 'Password updated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const generateResetToken = (userId) =>
+  jwt.sign({ userId, purpose: 'password_reset' }, getTokenSecret(), {
+    expiresIn: '15m',
+  });
+
+const verifyResetToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, getTokenSecret());
+    if (decoded.purpose !== 'password_reset' || !decoded.userId) {
+      throw new Error('Invalid reset token.');
+    }
+    return decoded;
+  } catch (error) {
+    throw new Error('Reset token is invalid or has expired.');
+  }
+};
+
+export const fetchSecurityQuestionByEmail = async (req, res, next) => {
+  try {
+    const email = String(req.body.email ?? '').trim().toLowerCase();
+
+    if (!email) {
+      return next({ status: 400, message: 'Email is required.' });
+    }
+
+    const user = await User.findOne({ email }).select('securityQuestionId securityQuestionSet');
+    if (!user || !user.securityQuestionSet || user.securityQuestionId === null) {
+      return next({
+        status: 404,
+        message: 'We could not find a security question for that account.',
+      });
+    }
+
+    const questionText =
+      SECURITY_QUESTIONS[user.securityQuestionId] ?? 'Security question not found';
+    res.json({ question: questionText });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifySecurityAnswerForReset = async (req, res, next) => {
+  try {
+    const email = String(req.body.email ?? '').trim().toLowerCase();
+    const question = String(req.body.question ?? '').trim();
+    const answer = String(req.body.answer ?? '').trim();
+
+    if (!email || !question || !answer) {
+      return next({ status: 400, message: 'Email, question, and answer are required.' });
+    }
+
+    const user = await User.findOne({ email }).select(
+      '+securityAnswer securityQuestionId securityQuestionHash securityQuestionSet',
+    );
+    if (!user || !user.securityQuestionSet || user.securityQuestionId === null) {
+      return next({
+        status: 404,
+        message: 'We could not find a security question for that account.',
+      });
+    }
+
+    const questionIndex = SECURITY_QUESTIONS.indexOf(question);
+    if (questionIndex === -1 || questionIndex !== user.securityQuestionId) {
+      return next({ status: 400, message: 'Security question does not match our records.' });
+    }
+
+    const questionMatches = await bcrypt.compare(question, user.securityQuestionHash ?? '');
+    if (!questionMatches) {
+      return next({ status: 400, message: 'Security question does not match our records.' });
+    }
+
+    const isMatch = await bcrypt.compare(answer, user.securityAnswer ?? '');
+    if (!isMatch) {
+      return next({ status: 401, message: 'Security answer is incorrect.' });
+    }
+
+    const resetToken = generateResetToken(user._id);
+    res.json({ message: 'Security answer verified.', resetToken });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPasswordWithToken = async (req, res, next) => {
+  try {
+    const resetToken = String(req.body.resetToken ?? '').trim();
+    const newPassword = String(req.body.newPassword ?? '');
+
+    if (!resetToken || !newPassword) {
+      return next({ status: 400, message: 'Reset token and new password are required.' });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyResetToken(resetToken);
+    } catch (error) {
+      return next({ status: 401, message: error.message });
+    }
+
+    const { isValid, unmet } = getPasswordValidation(newPassword);
+    if (!isValid) {
+      const message = `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`;
+      return next({ status: 400, message });
+    }
+
+    const user = await User.findById(decoded.userId).select('+password');
+    if (!user) {
+      return next({ status: 404, message: 'User not found.' });
+    }
+
+    const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsOld) {
+      return next({ status: 400, message: 'New password must differ from the previous password.' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    res.json({ message: 'Password updated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const setSecurityQuestion = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return next({ status: 401, message: 'Not authenticated.' });
+    }
+
+    const question = String(req.body.question ?? '').trim();
+    const answer = String(req.body.answer ?? '').trim();
+
+    if (!question) {
+      return next({ status: 400, message: 'Security question is required.' });
+    }
+    if (!SECURITY_QUESTIONS.includes(question)) {
+      return next({ status: 400, message: 'Selected security question is invalid.' });
+    }
+    if (!answer) {
+      return next({ status: 400, message: 'Security answer is required.' });
+    }
+    if (answer.length < 3) {
+      return next({ status: 400, message: 'Security answer must be at least 3 characters.' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return next({ status: 404, message: 'User not found.' });
+    }
+
+    const questionIndex = SECURITY_QUESTIONS.indexOf(question);
+    if (questionIndex === -1) {
+      return next({ status: 400, message: 'Selected security question is invalid.' });
+    }
+    user.securityQuestionId = questionIndex;
+    user.securityQuestionHash = await bcrypt.hash(question, 12);
+    user.securityAnswer = await bcrypt.hash(answer, 12);
+    user.securityQuestionSet = true;
+    await user.save();
+
+    res.json({
+      message: 'Security question saved.',
+      user: buildUserPayload(user),
+    });
   } catch (error) {
     next(error);
   }
