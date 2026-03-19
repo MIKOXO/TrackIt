@@ -55,3 +55,16 @@ export const selectIsDarkMode = (state) => state.theme.mode === 'dark'
 
 // Layout selectors
 export const selectSidebarOpen = (state) => state.layout.sidebarOpen
+
+// AI assistant selectors
+export const selectAssistantConversations = (state) => state.assistant.conversations
+export const selectActiveAssistantConversationId = (state) => state.assistant.activeConversationId
+export const selectAssistantLoadedConversationId = (state) => state.assistant.loadedConversationId
+export const selectAssistantMessages = (state) => state.assistant.messages
+export const selectAssistantLoading = (state) => state.assistant.loading
+export const selectAssistantError = (state) => state.assistant.error
+export const selectAssistantSummary = (state) => state.assistant.summary
+export const selectAssistantHistoryLoading = (state) => state.assistant.historyLoading
+export const selectAssistantHistoryError = (state) => state.assistant.historyError
+export const selectAssistantHistoryLoaded = (state) => state.assistant.historyLoaded
+export const selectAssistantConversationLoading = (state) => state.assistant.conversationLoading
