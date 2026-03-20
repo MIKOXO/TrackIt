@@ -224,6 +224,51 @@ export const getConversation = async (req, res, next) => {
   }
 };
 
+export const deleteConversation = async (req, res, next) => {
+  const { conversationId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    return next({ status: 404, message: 'Conversation not found.' });
+  }
+
+  try {
+    const conversation = await ChatHistory.findOneAndDelete({
+      _id: conversationId,
+      user: req.user.id,
+    });
+    if (!conversation) {
+      return next({ status: 404, message: 'Conversation not found.' });
+    }
+
+    if (conversation.active) {
+      const nextConversation = await ChatHistory.findOne({ user: req.user.id }).sort({
+        updatedAt: -1,
+      });
+      if (nextConversation) {
+        await ChatHistory.updateMany({ user: req.user.id }, { $set: { active: false } });
+        nextConversation.active = true;
+        await nextConversation.save();
+      }
+    }
+
+    const conversations = await ChatHistory.find({ user: req.user.id })
+      .sort({ updatedAt: -1 })
+      .lean();
+    const activeConversation = conversations.find((conv) => conv.active);
+    const initialConversationId =
+      activeConversation?._id?.toString() ?? conversations[0]?._id?.toString() ?? null;
+
+    res.status(200).json({
+      conversations: conversations.map(serializeConversation),
+      initialConversationId,
+    });
+  } catch (error) {
+    next({
+      status: 500,
+      message: error.message || 'Unable to delete the conversation right now.',
+    });
+  }
+};
+
 export const askAssistant = async (req, res, next) => {
   const question = (req.body?.question || '').trim();
   const { conversationId, title } = req.body || {};
