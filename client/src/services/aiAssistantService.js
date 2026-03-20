@@ -45,3 +45,13 @@ export const getAssistantConversation = (conversationId, token) => {
   }
   return apiClient.get(`/api/assistant/conversations/${conversationId}`, withAuthHeader(token))
 }
+
+export const deleteAssistantConversation = (conversationId, token) => {
+  if (!token) {
+    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
+  }
+  if (!conversationId) {
+    return Promise.reject(new Error('Conversation ID is required to delete a conversation.'))
+  }
+  return apiClient.delete(`/api/assistant/conversations/${conversationId}`, withAuthHeader(token))
+}

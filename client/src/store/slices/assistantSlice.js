@@ -4,6 +4,7 @@ import {
   fetchAssistantConversations as fetchAssistantConversationsAPI,
   createAssistantConversation as createAssistantConversationAPI,
   getAssistantConversation as getAssistantConversationAPI,
+  deleteAssistantConversation as deleteAssistantConversationAPI,
 } from '../../services/aiAssistantService.js'
 
 const generateMessageId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
@@ -47,6 +48,23 @@ export const loadAssistantConversation = createAsyncThunk(
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to load the conversation')
+    }
+  }
+)
+
+export const deleteAssistantConversation = createAsyncThunk(
+  'assistant/deleteConversation',
+  async ({ conversationId, token }, { rejectWithValue }) => {
+    if (!conversationId) {
+      return rejectWithValue('Conversation ID is required.')
+    }
+    try {
+      const response = await deleteAssistantConversationAPI(conversationId, token)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Failed to delete the conversation'
+      )
     }
   }
 )
@@ -108,6 +126,27 @@ const assistantSlice = createSlice({
         }
       })
       .addCase(fetchAssistantConversations.rejected, (state, action) => {
+        state.historyLoading = false
+        state.historyLoaded = true
+        state.historyError = action.payload
+      })
+      .addCase(deleteAssistantConversation.pending, (state) => {
+        state.historyLoading = true
+        state.historyError = null
+      })
+      .addCase(deleteAssistantConversation.fulfilled, (state, action) => {
+        state.historyLoading = false
+        state.historyLoaded = true
+        state.conversations = action.payload.conversations
+        const deletedId = action.meta.arg.conversationId
+        if (state.activeConversationId === deletedId) {
+          state.activeConversationId = action.payload.initialConversationId
+          state.loadedConversationId = null
+          state.messages = []
+          state.summary = null
+        }
+      })
+      .addCase(deleteAssistantConversation.rejected, (state, action) => {
         state.historyLoading = false
         state.historyLoaded = true
         state.historyError = action.payload
