@@ -67,14 +67,14 @@ const SecurityQuestion = () => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-300">
+      <div className="rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600/90 dark:text-emerald-300/90">
           Secure access
         </p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
           {user?.name ? `Hi ${user.name.split(' ')[0]},` : 'Protect your account'}
         </h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Select a security question and provide an answer that only you will remember. This will
           allow you to recover your password in the future.
         </p>

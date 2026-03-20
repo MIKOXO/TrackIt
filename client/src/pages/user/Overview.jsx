@@ -82,12 +82,15 @@ const Overview = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-4 rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6"
       >
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600/90 dark:text-emerald-300/90">
+          Overview
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
           Welcome back, {user?.name?.split(' ')[0]}
         </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Here's what's happening with your finances today
         </p>
       </motion.div>

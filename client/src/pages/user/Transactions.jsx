@@ -96,13 +96,15 @@ const Transactions = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4 rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+        className="mb-4 rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6"
       >
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.5em] text-slate-400">Transactions</p>
-            <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-50">Track your money</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600/90 dark:text-emerald-300/90">
+              Transactions
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">Track your money</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
               Log income and expenses to keep the dashboard accurate and see trends over time.
             </p>
           </div>

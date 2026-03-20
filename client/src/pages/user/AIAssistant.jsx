@@ -197,7 +197,7 @@ const AIAssistant = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-visible rounded-3xl border border-slate-200/70 bg-white p-4 shadow-lg shadow-slate-900/5 dark:border-trackit-border/70 dark:bg-slate-900/90 sm:p-6"
+          className="relative overflow-visible rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6"
         >
           <div className="pointer-events-none absolute -top-24 right-0 h-48 w-48 rounded-full bg-slate-200/50 blur-3xl dark:bg-slate-700/20" />
           <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
