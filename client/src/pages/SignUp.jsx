@@ -11,6 +11,7 @@ import { register } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
+import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js';
 import { PASSWORD_REQUIREMENTS } from '../constants/passwordRequirements.js';
 
 const SignUp = () => {
@@ -23,7 +24,6 @@ const SignUp = () => {
     password: '',
     confirmPassword: '',
   });
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
   const { showToast } = useToast();
@@ -63,10 +63,9 @@ const SignUp = () => {
 
   const isSignUpReady = Boolean(
     formData.name.trim() &&
-    formData.email.trim() &&
-    formData.password &&
-    formData.confirmPassword &&
-    agreedToTerms,
+      formData.email.trim() &&
+      formData.password &&
+      formData.confirmPassword,
   );
   const showSignUpLoading = isSubmitting || loading;
 
@@ -294,35 +293,6 @@ const SignUp = () => {
                 </motion.div>
 
                 {/* Terms Checkbox */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                  className='flex items-start gap-3'>
-                  <input
-                    type='checkbox'
-                    id='terms'
-                    checked={agreedToTerms}
-                    onChange={(event) => setAgreedToTerms(event.target.checked)}
-                    className='mt-1 h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 dark:border-slate-600'
-                  />
-                  <label
-                    htmlFor='terms'
-                    className='text-sm text-slate-600 dark:text-slate-400'>
-                    I agree to the{' '}
-                    <a
-                      href='#'
-                      className='font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'>
-                      Terms of Service
-                    </a>{' '}
-                    and{' '}
-                    <a
-                      href='#'
-                      className='font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'>
-                      Privacy Policy
-                    </a>
-                  </label>
-                </motion.div>
 
                 {/* Submit Button */}
                 <motion.button
@@ -334,11 +304,7 @@ const SignUp = () => {
                   type='submit'
                   disabled={!isSignUpReady || showSignUpLoading}
                   aria-busy={showSignUpLoading}
-                  className={`w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-trackit-accent to-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 transition ${
-                    showSignUpLoading || !isSignUpReady
-                      ? 'cursor-not-allowed opacity-80 shadow-none from-slate-500 via-slate-500 to-slate-600 bg-gradient-to-r disabled:text-slate-200'
-                      : 'hover:shadow-xl'
-                  }`}
+                  className={getPrimaryButtonClass(showSignUpLoading || !isSignUpReady)}
                 >
                   <span className='inline-flex items-center gap-2'>
                     {showSignUpLoading ? (
