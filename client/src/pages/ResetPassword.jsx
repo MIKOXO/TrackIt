@@ -159,12 +159,6 @@ const ResetPassword = () => {
                 {isSubmitting ? 'Resetting password...' : 'Reset my password'}
               </button>
 
-              <div className="text-sm text-slate-600 dark:text-slate-400">
-                Don't have a token yet?{' '}
-                <Link className="font-semibold text-emerald-600 dark:text-emerald-300" to="/forgot-password">
-                  Fetch it now
-                </Link>
-              </div>
             </form>
           </motion.div>
         </div>
