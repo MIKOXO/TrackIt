@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const CSRF_HEADER_NAME = 'x-csrf-token';
+const CSRF_COOKIE_NAME = 'trackitCsrf';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_STORAGE_KEY = 'trackitCsrfToken';
 
@@ -19,13 +20,36 @@ let csrfToken = getStorage()?.getItem(CSRF_STORAGE_KEY) || null;
 
 const persistToken = (token) => {
   csrfToken = token;
-  if (isBrowser) {
-    if (token) {
-      window.localStorage.setItem(CSRF_STORAGE_KEY, token);
-    } else {
-      window.localStorage.removeItem(CSRF_STORAGE_KEY);
-    }
+  if (!isBrowser) {
+    return;
   }
+  if (token) {
+    window.localStorage.setItem(CSRF_STORAGE_KEY, token);
+  } else {
+    window.localStorage.removeItem(CSRF_STORAGE_KEY);
+  }
+};
+
+const getCsrfTokenFromCookie = () => {
+  if (!isBrowser) return null;
+  const cookie = document.cookie
+    .split('; ')
+    .find((entry) => entry.startsWith(`${CSRF_COOKIE_NAME}=`));
+  if (!cookie) return null;
+  return decodeURIComponent(cookie.split('=')[1] || '');
+};
+
+const resolveCsrfToken = () => {
+  if (csrfToken) {
+    return csrfToken;
+  }
+
+  const tokenFromCookie = getCsrfTokenFromCookie();
+  if (tokenFromCookie) {
+    persistToken(tokenFromCookie);
+  }
+
+  return tokenFromCookie;
 };
 
 const updateTokenFromHeaders = (headers) => {
@@ -41,11 +65,14 @@ const updateTokenFromHeaders = (headers) => {
 
 apiClient.interceptors.request.use((config) => {
   const method = (config.method || 'get').toUpperCase();
-  if (!SAFE_METHODS.has(method) && csrfToken) {
-    config.headers = {
-      ...config.headers,
-      [CSRF_HEADER_NAME]: csrfToken,
-    };
+  if (!SAFE_METHODS.has(method)) {
+    const token = resolveCsrfToken();
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        [CSRF_HEADER_NAME]: token,
+      };
+    }
   }
   return config;
 });
