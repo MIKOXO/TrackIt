@@ -1,9 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FiUser, FiLock, FiGlobe, FiEye, FiEyeOff, FiCheck, FiX } from 'react-icons/fi'
+import {
+  FiUser,
+  FiLock,
+  FiGlobe,
+  FiEye,
+  FiEyeOff,
+  FiCheck,
+  FiX,
+  FiTrash2,
+} from 'react-icons/fi'
 import { useDispatch, useSelector } from 'react-redux'
-import { changePassword, updateProfile } from '../../services/authService.js'
-import { setUser } from '../../store/slices/authSlice.js'
+import { useNavigate } from 'react-router-dom'
+import { changePassword, deleteAccount, updateProfile } from '../../services/authService.js'
+import { clearUser, setUser } from '../../store/slices/authSlice.js'
 import { useToast } from '../../components/ui/ToastProvider.jsx'
 import { getServerMessage } from '../../utils/errorUtils.js'
 import LoadingIndicator from '../../components/ui/LoadingIndicator.jsx'
@@ -40,6 +50,7 @@ const PASSWORD_REQUIREMENTS = [
 
 const Settings = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { user, token } = useSelector((state) => state.auth)
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
@@ -60,6 +71,12 @@ const Settings = () => {
   })
   const [currency, setCurrency] = useState(user?.currency ?? 'ETB')
   const [isSavingPreferences, setIsSavingPreferences] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [showDeletePassword, setShowDeletePassword] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteErrorTimeout, setDeleteErrorTimeout] = useState(null)
 
   const currencyOptions = useMemo(
     () => [
@@ -147,6 +164,20 @@ const Settings = () => {
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
     }
   }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'profile') {
+      setIsDeleteModalOpen(false)
+      setDeletePassword('')
+      setShowDeletePassword(false)
+      setIsDeletingAccount(false)
+      setDeleteError('')
+      if (deleteErrorTimeout) {
+        clearTimeout(deleteErrorTimeout)
+        setDeleteErrorTimeout(null)
+      }
+    }
+  }, [activeTab, deleteErrorTimeout])
 
   const passwordRequirementState = useMemo(
     () =>
@@ -240,8 +271,44 @@ const Settings = () => {
     }
   }
 
+  const handleDeleteAccount = async () => {
+    if (!token) {
+      showToast('You must be signed in to delete your account.', { type: 'error' })
+      return
+    }
+    if (!deletePassword.trim()) {
+      showToast('Password is required to delete your account.', { type: 'error' })
+      return
+    }
+
+    setIsDeletingAccount(true)
+    try {
+      const response = await deleteAccount({ password: deletePassword }, token)
+      showToast(response.data?.message ?? 'Account deleted successfully.', { type: 'success' })
+      dispatch(clearUser())
+      navigate('/signin')
+      setIsDeleteModalOpen(false)
+      setDeletePassword('')
+      setShowDeletePassword(false)
+    } catch (err) {
+      const message = getServerMessage(err, 'Unable to delete your account.')
+      showToast(message, { type: 'error' })
+      setDeleteError(message)
+      if (deleteErrorTimeout) {
+        clearTimeout(deleteErrorTimeout)
+      }
+      const timeoutId = setTimeout(() => {
+        setDeleteError('')
+      }, 4000)
+      setDeleteErrorTimeout(timeoutId)
+    } finally {
+      setIsDeletingAccount(false)
+    }
+  }
+
   return (
-    <div className="space-y-8">
+    <>
+      <div className="space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -370,6 +437,25 @@ const Settings = () => {
                   )}
                 </button>
               </form>
+
+              <div className="mt-10 border-t border-slate-200/60 pt-6 dark:border-trackit-border/60">
+                <div className="flex items-center gap-3">
+                  <FiTrash2 className="h-5 w-5 text-rose-500" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    Delete account
+                  </h3>
+                </div>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="mt-4 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-700"
+                >
+                  Delete account
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -598,7 +684,83 @@ const Settings = () => {
           )}
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+            className="mx-4 w-full max-w-md rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl dark:border-trackit-border/70 dark:bg-slate-900/90"
+          >
+            <h3 id="delete-account-title" className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              Delete account
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              This permanently deletes your account, transactions, and AI chat history. This action cannot be undone.
+            </p>
+            <div className="mt-5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Enter your password to confirm
+              </label>
+              <div className="relative">
+                <input
+                  type={showDeletePassword ? 'text' : 'password'}
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200/60 bg-white px-4 py-3 pr-10 text-slate-900 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  aria-label={showDeletePassword ? 'Hide password' : 'Show password'}
+                >
+                  {showDeletePassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            {deleteError ? (
+              <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">{deleteError}</p>
+            ) : null}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteModalOpen(false)
+                  setDeletePassword('')
+                  setShowDeletePassword(false)
+                  setDeleteError('')
+                  if (deleteErrorTimeout) {
+                    clearTimeout(deleteErrorTimeout)
+                    setDeleteErrorTimeout(null)
+                  }
+                }}
+                className="rounded-2xl border border-slate-200/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-transparent dark:bg-slate-800/60 dark:text-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={!deletePassword.trim() || isDeletingAccount}
+                aria-busy={isDeletingAccount}
+                className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeletingAccount ? (
+                  <>
+                    <LoadingIndicator />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete account'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
