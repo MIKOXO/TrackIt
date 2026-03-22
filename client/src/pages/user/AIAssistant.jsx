@@ -319,7 +319,7 @@ const AIAssistant = () => {
                       <div
                         className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm sm:max-w-[76%] md:text-[0.95rem] xl:max-w-[65%] 2xl:max-w-[56rem] ${
                           message.type === 'user'
-                            ? 'bg-trackit-accent text-white dark:bg-emerald-600'
+                            ? 'bg-trackit-accent text-white shadow-lg shadow-emerald-500/30 dark:bg-trackit-accent'
                             : 'border border-slate-200/60 bg-white text-slate-900 dark:border-slate-700/80 dark:bg-slate-800/90 dark:text-slate-100'
                         }`}
                       >
