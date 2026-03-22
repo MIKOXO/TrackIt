@@ -54,11 +54,11 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
       {/* Mobile Toggle */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className='fixed left-0 top-4 z-50 rounded-xl bg-slate-900/90 p-2 text-white shadow-lg backdrop-blur-sm lg:hidden'>
+        className="fixed left-3 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/70 bg-white/90 text-slate-900 shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-white dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:border-emerald-400 lg:hidden focus-visible:outline-none focus-visible:ring focus-visible:ring-emerald-300/60 backdrop-blur-sm"
         {isMobileOpen ? (
-          <FiX className='h-6 w-6' />
+          <FiX className="h-6 w-6" />
         ) : (
-          <FiMenu className='h-6 w-6' />
+          <FiMenu className="h-6 w-6" />
         )}
       </button>
 
