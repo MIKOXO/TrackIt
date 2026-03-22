@@ -31,7 +31,7 @@ const getDefaultForm = () => (({
 }));
 
 const STANDARD_INPUT_CLASSES =
-  'mt-1 w-full rounded-xl border border-slate-200/60 bg-slate-950/70 px-4 py-3 text-sm font-semibold text-slate-50 placeholder-slate-400 shadow-sm shadow-black/40 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-50 dark:placeholder-slate-500 dark:focus:border-emerald-400';
+  'mt-1 w-full rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-900 placeholder-slate-400 shadow-sm shadow-slate-200/60 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-50 dark:placeholder-slate-500 dark:shadow-black/40 dark:focus:border-emerald-400';
 
 const getFormInputClass = (extra = '') => `${STANDARD_INPUT_CLASSES} ${extra}`.trim();
 
@@ -56,10 +56,10 @@ const CATEGORY_OPTION_BASE =
   'w-full cursor-pointer px-4 py-2 text-left text-sm transition focus:outline-none';
 
 const CATEGORY_OPTION_ACTIVE =
-  'text-slate-900 bg-emerald-200/60 dark:text-slate-50 dark:bg-emerald-500/20';
+  'text-slate-900 bg-emerald-100 dark:text-slate-50 dark:bg-emerald-500/20';
 
 const CATEGORY_OPTION_INACTIVE =
-  'text-slate-50 hover:bg-white/10 dark:hover:bg-white/10';
+  'text-slate-700 hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-white/10';
 
 const AddTransactionModal = ({ isOpen, onClose, onCreate, isSubmitting }) => {
   const [formData, setFormData] = useState(getDefaultForm);
@@ -183,7 +183,7 @@ const AddTransactionModal = ({ isOpen, onClose, onCreate, isSubmitting }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 z-44 h-screen w-full max-w-md overflow-y-auto border-l border-slate-200/50 bg-white/95 shadow-2xl shadow-black/20 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/95 sm:max-w-sm pt-[72px]"
+            className="fixed right-0 top-0 z-44 h-[100dvh] w-full max-w-md overflow-y-auto border-l border-slate-200/50 bg-white/95 shadow-2xl shadow-black/20 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/95 sm:max-w-sm pt-[72px]"
           >
             <div className="border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-slate-100/50 px-5 py-4 dark:border-slate-700/50 dark:from-slate-800/50 dark:to-slate-900/50">
               <div className="flex items-start justify-between gap-3">
@@ -264,7 +264,7 @@ const AddTransactionModal = ({ isOpen, onClose, onCreate, isSubmitting }) => {
                       <div
                         role="listbox"
                         aria-label="Transaction categories"
-                        className="absolute left-0 right-0 top-full z-10 mt-2 max-h-56 overflow-auto rounded-2xl border border-slate-800/80 bg-slate-950 shadow-2xl shadow-black/60"
+                        className="absolute left-0 right-0 top-full z-10 mt-2 max-h-56 overflow-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-200/70 dark:border-slate-800/80 dark:bg-slate-950 dark:shadow-black/60"
                       >
                         {categoryOptions.map((category) => (
                           <button
@@ -323,7 +323,7 @@ const AddTransactionModal = ({ isOpen, onClose, onCreate, isSubmitting }) => {
               </div>
             </form>
 
-            <div className="sticky bottom-0 border-t border-slate-200/50 bg-slate-50/50 px-5 py-3 dark:border-slate-700/50 dark:bg-slate-800/30">
+            <div className="sticky bottom-0 border-t border-slate-200/50 bg-slate-50/50 px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] dark:border-slate-700/50 dark:bg-slate-800/30">
               <button
                 type="submit"
                 onClick={handleSubmit}
