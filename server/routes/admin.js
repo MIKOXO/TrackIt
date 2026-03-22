@@ -1,11 +1,13 @@
 import express from 'express';
 import { protect, adminOnly } from '../middleware/auth.js';
+import csrfProtection from '../middleware/csrfProtection.js';
 import { getDashboardStats, getUserStats, getAllUsers, updateUserStatus, deleteUser } from '../controllers/adminController.js';
 
 const router = express.Router();
 
 // Protect all admin routes
 router.use(protect);
+router.use(csrfProtection);
 router.use(adminOnly);
 
 // Dashboard stats

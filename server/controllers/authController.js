@@ -1,9 +1,18 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import ChatHistory from '../models/ChatHistory.js';
 import SECURITY_QUESTIONS from '../constants/securityQuestions.js';
+import {
+  AUTH_COOKIE_NAME,
+  CSRF_COOKIE_NAME,
+  AUTH_COOKIE_OPTIONS,
+  CSRF_COOKIE_OPTIONS,
+  AUTH_COOKIE_CLEAR_OPTIONS,
+  CSRF_COOKIE_CLEAR_OPTIONS,
+} from '../constants/authCookies.js';
 
 const SUPPORTED_CURRENCIES = new Set([
   'USD',
@@ -46,6 +55,18 @@ const PASSWORD_REQUIREMENTS = [
     test: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value),
   },
 ]
+
+const createCsrfToken = () => crypto.randomBytes(32).toString('hex');
+
+const attachAuthCookies = (res, token) => {
+  res.cookie(AUTH_COOKIE_NAME, token, AUTH_COOKIE_OPTIONS);
+  res.cookie(CSRF_COOKIE_NAME, createCsrfToken(), CSRF_COOKIE_OPTIONS);
+};
+
+const clearAuthCookies = (res) => {
+  res.clearCookie(AUTH_COOKIE_NAME, AUTH_COOKIE_CLEAR_OPTIONS);
+  res.clearCookie(CSRF_COOKIE_NAME, CSRF_COOKIE_CLEAR_OPTIONS);
+};
 
 const getPasswordValidation = (value) => {
   const unmet = PASSWORD_REQUIREMENTS.filter((requirement) => !requirement.test(value))
@@ -104,12 +125,10 @@ export const register = async (req, res, next) => {
       role: 'user',
     });
     const token = generateToken({ userId: user._id, role: user.role });
+    attachAuthCookies(res, token);
 
     res.status(201).json({
-      token,
-      user: {
-        ...buildUserPayload(user),
-      },
+      user: buildUserPayload(user),
     });
   } catch (error) {
     if (error?.code === 11000) {
@@ -147,8 +166,8 @@ export const login = async (req, res, next) => {
     }
 
     const token = generateToken({ userId: user._id, role: user.role });
+    attachAuthCookies(res, token);
     res.json({
-      token,
       user: buildUserPayload(user),
     });
   } catch (error) {
@@ -463,6 +482,11 @@ export const setSecurityQuestion = async (req, res, next) => {
   }
 };
 
+export const logout = (req, res) => {
+  clearAuthCookies(res);
+  res.json({ message: 'Signed out successfully.' });
+};
+
 export const deleteCurrentUser = async (req, res, next) => {
   try {
     if (!req.user) {
@@ -491,6 +515,7 @@ export const deleteCurrentUser = async (req, res, next) => {
     await Transaction.deleteMany({ user: user._id });
     await ChatHistory.deleteMany({ user: user._id });
     await user.deleteOne();
+    clearAuthCookies(res);
 
     res.json({ message: 'Account deleted successfully.' });
   } catch (error) {

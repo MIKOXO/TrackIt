@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { AUTH_COOKIE_NAME } from '../constants/authCookies.js';
 
 const verifyToken = (token) => {
   const secret = process.env.JWT_SECRET;
@@ -12,11 +13,13 @@ const verifyToken = (token) => {
 export const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next({ status: 401, message: 'Authorization header missing.' });
+    const cookieToken = req.cookies?.[AUTH_COOKIE_NAME];
+    const headerToken =
+      authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const token = headerToken || cookieToken;
+    if (!token) {
+      return next({ status: 401, message: 'Authorization credentials are required.' });
     }
-
-    const token = authHeader.split(' ')[1];
     const decoded = verifyToken(token);
     const user = await User.findById(decoded.userId);
     if (!user) {
