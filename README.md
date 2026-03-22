@@ -2,7 +2,7 @@
 
 TrackIt is a modern, intentionally calm personal finance workspace. The client wraps an AI-first dashboard, guided analytics, and secure user/admin flows into a responsive React 19 + Vite + Tailwind UI so you can explore budgets, invoices, and productivity data without drilling through spreadsheets.
 
-![Homepage snapshot](src/assets/image.png)
+![Homepage snapshot](client/src/assets/image.png)
 _Homepage preview (screenshot stored at `src/assets/image.png`)._
 
 ## Why TrackIt?
