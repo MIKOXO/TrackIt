@@ -64,3 +64,7 @@ _Homepage preview (screenshot stored at `src/assets/image.png`)._
 ## Next steps
 
 If you are developing features, keep the backend contracts in sync (especially new endpoints under `/api/`). For testing, run the lint script and add unit/feature coverage as needed.
+
+## Live demo
+
+- Frontend: https://track-it-neon-two.vercel.app/
