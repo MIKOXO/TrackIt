@@ -7,14 +7,22 @@ const isProduction = process.env.NODE_ENV === 'production';
 const createCookieOptions = ({ httpOnly }) => ({
   httpOnly,
   secure: isProduction,
-  sameSite: 'lax',
+  sameSite: 'none',
   maxAge: AUTH_COOKIE_MAX_AGE_MS,
 });
 
 export const AUTH_COOKIE_OPTIONS = createCookieOptions({ httpOnly: true });
 export const CSRF_COOKIE_OPTIONS = createCookieOptions({ httpOnly: false });
-export const AUTH_COOKIE_CLEAR_OPTIONS = { httpOnly: true, secure: isProduction, sameSite: 'lax' };
-export const CSRF_COOKIE_CLEAR_OPTIONS = { httpOnly: false, secure: isProduction, sameSite: 'lax' };
+export const AUTH_COOKIE_CLEAR_OPTIONS = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: 'none',
+};
+export const CSRF_COOKIE_CLEAR_OPTIONS = {
+  httpOnly: false,
+  secure: isProduction,
+  sameSite: 'none',
+};
 
 export {
   AUTH_COOKIE_NAME,
