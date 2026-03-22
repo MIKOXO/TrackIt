@@ -12,14 +12,33 @@ import errorHandler from './middleware/errorHandler.js';
 dotenv.config();
 
 const app = express();
-const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:5173';
+
+const parseOrigins = (value = '') =>
+  value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = parseOrigins(process.env.CLIENT_URLS ?? process.env.CLIENT_URL ?? 'http://localhost:5173');
+const corsOptions = {
+  origin: (incomingOrigin, callback) => {
+    if (!incomingOrigin || allowedOrigins.includes(incomingOrigin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+};
+
+const PORT = process.env.PORT || 4000;
+
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
-const PORT = process.env.PORT || 4000;
 
 app.use(helmet());
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
