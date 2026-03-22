@@ -2,33 +2,24 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const getStoredAuth = () => {
   if (typeof window === 'undefined') {
-    return { user: null, token: null }
+    return { user: null }
   }
 
-  const token = window.localStorage.getItem('trackitToken')
   const userRaw = window.localStorage.getItem('trackitUser')
-  let user = null
-
-  if (userRaw) {
-    try {
-      user = JSON.parse(userRaw)
-    } catch {
-      user = null
-    }
+  if (!userRaw) {
+    return { user: null }
   }
 
-  return { user, token }
+  try {
+    return { user: JSON.parse(userRaw) }
+  } catch {
+    return { user: null }
+  }
 }
 
-const persistAuth = (user, token) => {
+const persistAuth = (user) => {
   if (typeof window === 'undefined') {
     return
-  }
-
-  if (token) {
-    window.localStorage.setItem('trackitToken', token)
-  } else {
-    window.localStorage.removeItem('trackitToken')
   }
 
   if (user) {
@@ -42,8 +33,7 @@ const stored = getStoredAuth()
 
 const initialState = {
   user: stored.user,
-  token: stored.token,
-  isAuthenticated: Boolean(stored.token),
+  isAuthenticated: Boolean(stored.user),
   loading: false,
   error: null,
 }
@@ -53,20 +43,19 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      state.user = action.payload.user
-      state.token = action.payload.token
-      state.isAuthenticated = Boolean(action.payload.token)
+      const user = action.payload?.user ?? action.payload
+      state.user = user
+      state.isAuthenticated = Boolean(user)
       state.error = null
       state.loading = false
-      persistAuth(action.payload.user, action.payload.token)
+      persistAuth(user)
     },
     clearUser: (state) => {
       state.user = null
-      state.token = null
       state.isAuthenticated = false
       state.error = null
       state.loading = false
-      persistAuth(null, null)
+      persistAuth(null)
     },
     setLoading: (state, action) => {
       state.loading = action.payload

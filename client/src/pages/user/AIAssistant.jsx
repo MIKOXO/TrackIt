@@ -15,7 +15,7 @@ import {
   selectAssistantLoading,
   selectAssistantMessages,
   selectActiveAssistantConversationId,
-  selectToken,
+  selectIsAuthenticated,
 } from '../../store/selectors.js'
 import {
   fetchAssistantConversations,
@@ -58,7 +58,7 @@ const AIAssistant = () => {
   const historyLoaded = useSelector(selectAssistantHistoryLoaded)
   const error = useSelector(selectAssistantError)
   const historyError = useSelector(selectAssistantHistoryError)
-  const token = useSelector(selectToken)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
 
   useEffect(() => {
     if (error) {
@@ -73,26 +73,26 @@ const AIAssistant = () => {
   }, [historyError, showToast])
 
   useEffect(() => {
-    if (token) {
-      dispatch(fetchAssistantConversations({ token }))
+    if (isAuthenticated) {
+      dispatch(fetchAssistantConversations())
     }
-  }, [dispatch, token])
+  }, [dispatch, isAuthenticated])
 
   useEffect(() => {
-    if (token && historyLoaded && !historyError && conversations.length === 0) {
-      dispatch(startNewConversation({ token }))
+    if (isAuthenticated && historyLoaded && !historyError && conversations.length === 0) {
+      dispatch(startNewConversation({}))
     }
-  }, [dispatch, token, historyLoaded, historyError, conversations.length])
+  }, [dispatch, isAuthenticated, historyLoaded, historyError, conversations.length])
 
   useEffect(() => {
-    if (token && activeConversationId && activeConversationId !== loadedConversationId) {
-      dispatch(loadAssistantConversation({ token, conversationId: activeConversationId }))
+    if (isAuthenticated && activeConversationId && activeConversationId !== loadedConversationId) {
+      dispatch(loadAssistantConversation({ conversationId: activeConversationId }))
     }
-  }, [dispatch, token, activeConversationId, loadedConversationId])
+  }, [dispatch, isAuthenticated, activeConversationId, loadedConversationId])
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('Please sign in to use the AI assistant.', { type: 'error' })
       return
     }
@@ -104,7 +104,6 @@ const AIAssistant = () => {
     dispatch(
       sendAssistantQuestion({
         question: inputValue.trim(),
-        token,
         conversationId: activeConversationId,
       })
     )
@@ -112,12 +111,12 @@ const AIAssistant = () => {
   }
 
   const handleStartNewChat = () => {
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('Please sign in to use the AI assistant.', { type: 'error' })
       return
     }
 
-    dispatch(startNewConversation({ token }))
+    dispatch(startNewConversation({}))
   }
 
   const handleKeyPress = (e) => {
@@ -136,7 +135,7 @@ const AIAssistant = () => {
   const handleDeleteConversation = (event, conversation) => {
     event.preventDefault()
     event.stopPropagation()
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('Please sign in to use the AI assistant.', { type: 'error' })
       return
     }
@@ -153,7 +152,6 @@ const AIAssistant = () => {
     try {
       await dispatch(
         deleteAssistantConversation({
-          token,
           conversationId: pendingDeleteConversation.id,
         })
       ).unwrap()

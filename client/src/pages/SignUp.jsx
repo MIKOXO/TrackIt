@@ -108,9 +108,7 @@ const SignUp = () => {
         email: formData.email,
         password: formData.password,
       });
-      dispatch(
-        setUser({ user: response.data.user, token: response.data.token }),
-      );
+      dispatch(setUser({ user: response.data.user }));
       showToast('Account created successfully', { type: 'success' });
       navigate('/security-question', { replace: true });
     } catch (err) {

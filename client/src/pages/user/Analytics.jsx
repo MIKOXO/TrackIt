@@ -10,7 +10,7 @@ import { formatCurrency } from '../../utils/currencyUtils.js'
 
 const Analytics = () => {
   const dispatch = useDispatch()
-  const token = useSelector((state) => state.auth.token)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const isDark = useSelector((state) => state.theme.mode === 'dark')
   const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { data, loading, error } = useSelector((state) => state.analytics)
@@ -18,10 +18,9 @@ const Analytics = () => {
   const [days] = useState(14)
 
   useEffect(() => {
-    if (token) {
-      dispatch(fetchAnalytics({ token, months, days }))
-    }
-  }, [token, dispatch, months, days])
+    if (!isAuthenticated) return
+    dispatch(fetchAnalytics({ months, days }))
+  }, [dispatch, isAuthenticated, months, days])
 
   const formatMoney = (value) => formatCurrency(value, currency)
 

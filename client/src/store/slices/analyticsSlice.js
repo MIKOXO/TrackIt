@@ -3,9 +3,9 @@ import { getAnalytics as getAnalyticsAPI } from '../../services/analyticsService
 
 export const fetchAnalytics = createAsyncThunk(
   'analytics/fetchAnalytics',
-  async ({ token, months, days }, { rejectWithValue }) => {
+  async ({ months, days } = {}, { rejectWithValue }) => {
     try {
-      const response = await getAnalyticsAPI({ token, months, days })
+      const response = await getAnalyticsAPI({ months, days })
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch analytics')
@@ -48,4 +48,3 @@ const analyticsSlice = createSlice({
 
 export const { clearAnalytics } = analyticsSlice.actions
 export default analyticsSlice.reducer
-

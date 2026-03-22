@@ -18,9 +18,9 @@ const mapServerMessage = (message) => ({
 
 export const fetchAssistantConversations = createAsyncThunk(
   'assistant/fetchConversations',
-  async ({ token }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchAssistantConversationsAPI(token)
+      const response = await fetchAssistantConversationsAPI()
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to load conversations')
@@ -30,9 +30,9 @@ export const fetchAssistantConversations = createAsyncThunk(
 
 export const startNewConversation = createAsyncThunk(
   'assistant/startConversation',
-  async ({ token, title = 'Chat' }, { rejectWithValue }) => {
+  async ({ title = 'Chat' }, { rejectWithValue }) => {
     try {
-      const response = await createAssistantConversationAPI(token, title)
+      const response = await createAssistantConversationAPI(title)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to start a new conversation')
@@ -42,9 +42,9 @@ export const startNewConversation = createAsyncThunk(
 
 export const loadAssistantConversation = createAsyncThunk(
   'assistant/loadConversation',
-  async ({ token, conversationId }, { rejectWithValue }) => {
+  async ({ conversationId }, { rejectWithValue }) => {
     try {
-      const response = await getAssistantConversationAPI(conversationId, token)
+      const response = await getAssistantConversationAPI(conversationId)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to load the conversation')
@@ -54,12 +54,12 @@ export const loadAssistantConversation = createAsyncThunk(
 
 export const deleteAssistantConversation = createAsyncThunk(
   'assistant/deleteConversation',
-  async ({ conversationId, token }, { rejectWithValue }) => {
+  async ({ conversationId }, { rejectWithValue }) => {
     if (!conversationId) {
       return rejectWithValue('Conversation ID is required.')
     }
     try {
-      const response = await deleteAssistantConversationAPI(conversationId, token)
+      const response = await deleteAssistantConversationAPI(conversationId)
       return response.data
     } catch (error) {
       return rejectWithValue(
@@ -71,12 +71,12 @@ export const deleteAssistantConversation = createAsyncThunk(
 
 export const sendAssistantQuestion = createAsyncThunk(
   'assistant/sendQuestion',
-  async ({ question, token, conversationId }, { rejectWithValue }) => {
+  async ({ question, conversationId }, { rejectWithValue }) => {
     if (!conversationId) {
       return rejectWithValue('No conversation selected.')
     }
     try {
-      const response = await askAssistantAPI(question, token, conversationId)
+      const response = await askAssistantAPI(question, conversationId)
       return {
         conversationId: response.data.conversationId,
         answer: response.data.answer,

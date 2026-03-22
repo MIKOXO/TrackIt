@@ -27,7 +27,6 @@ store/
 ```javascript
 {
   user: Object | null,
-  token: String | null,
   isAuthenticated: Boolean,
   loading: Boolean,
   error: String | null
@@ -35,20 +34,20 @@ store/
 ```
 
 **Actions:**
-- `setUser(payload)` - Set authenticated user and token
+- `setUser(payload)` - Set authenticated user
 - `clearUser()` - Clear user session (logout)
 - `setLoading(payload)` - Set loading state
 - `setError(payload)` - Set error message
 
-**Persistence:** Automatically syncs with localStorage (`trackitToken`, `trackitUser`)
+**Persistence:** Automatically syncs with localStorage (`trackitUser`)
 
 **Usage:**
 ```javascript
 import { useDispatch, useSelector } from 'react-redux'
 import { setUser, clearUser } from '../store/slices/authSlice'
 
-const { user, token, isAuthenticated } = useSelector((state) => state.auth)
-dispatch(setUser({ user: userData, token: authToken }))
+const { user, isAuthenticated } = useSelector((state) => state.auth)
+dispatch(setUser({ user: userData }))
 ```
 
 ---
@@ -67,8 +66,8 @@ dispatch(setUser({ user: userData, token: authToken }))
 ```
 
 **Async Thunks:**
-- `fetchTransactions(token)` - Fetch all user transactions
-- `addTransaction({ payload, token })` - Create new transaction
+- `fetchTransactions()` - Fetch all user transactions
+- `addTransaction(payload)` - Create new transaction
 
 **Actions:**
 - `clearTransactions()` - Clear all transactions (on logout)
@@ -81,10 +80,10 @@ import { fetchTransactions, addTransaction } from '../store/slices/transactionSl
 const { transactions, loading } = useSelector((state) => state.transactions)
 
 // Fetch transactions
-dispatch(fetchTransactions(token))
+dispatch(fetchTransactions())
 
 // Add transaction
-dispatch(addTransaction({ payload: transactionData, token }))
+dispatch(addTransaction(transactionData))
   .unwrap()
   .then(() => console.log('Success'))
   .catch((error) => console.error(error))
@@ -157,7 +156,6 @@ Reusable, memoized selectors for efficient state access and derived data.
 ```javascript
 // Auth
 selectUser(state)
-selectToken(state)
 selectIsAuthenticated(state)
 
 // Transactions

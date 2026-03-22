@@ -1,16 +1,6 @@
 import apiClient from './apiClient.js'
 
-const withAuthHeader = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
-
-export const askAssistant = (question, token, conversationId) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
-  }
-
+export const askAssistant = (question, conversationId) => {
   if (!question?.trim()) {
     return Promise.reject(new Error('A question is required to consult the AI assistant.'))
   }
@@ -22,36 +12,24 @@ export const askAssistant = (question, token, conversationId) => {
     payload.conversationId = conversationId
   }
 
-  return apiClient.post('/api/assistant', payload, withAuthHeader(token))
+  return apiClient.post('/api/assistant', payload)
 }
 
-export const fetchAssistantConversations = (token) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
-  }
-  return apiClient.get('/api/assistant/conversations', withAuthHeader(token))
+export const fetchAssistantConversations = () => {
+  return apiClient.get('/api/assistant/conversations')
 }
 
-export const createAssistantConversation = (token, title = 'Chat') => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
-  }
-  return apiClient.post('/api/assistant/conversations', { title }, withAuthHeader(token))
+export const createAssistantConversation = (title = 'Chat') => {
+  return apiClient.post('/api/assistant/conversations', { title })
 }
 
-export const getAssistantConversation = (conversationId, token) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
-  }
-  return apiClient.get(`/api/assistant/conversations/${conversationId}`, withAuthHeader(token))
+export const getAssistantConversation = (conversationId) => {
+  return apiClient.get(`/api/assistant/conversations/${conversationId}`)
 }
 
-export const deleteAssistantConversation = (conversationId, token) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to access the AI assistant.'))
-  }
+export const deleteAssistantConversation = (conversationId) => {
   if (!conversationId) {
     return Promise.reject(new Error('Conversation ID is required to delete a conversation.'))
   }
-  return apiClient.delete(`/api/assistant/conversations/${conversationId}`, withAuthHeader(token))
+  return apiClient.delete(`/api/assistant/conversations/${conversationId}`)
 }

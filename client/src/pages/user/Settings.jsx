@@ -51,7 +51,8 @@ const PASSWORD_REQUIREMENTS = [
 const Settings = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { user, token } = useSelector((state) => state.auth)
+  const { user } = useSelector((state) => state.auth)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [profileData, setProfileData] = useState({
@@ -116,7 +117,7 @@ const Settings = () => {
   }, [profileData.email, profileData.name, user?.email, user?.name])
 
   const canSaveProfile =
-    Boolean(token) &&
+    isAuthenticated &&
     Boolean(profileData.name.trim()) &&
     Boolean(profileData.email.trim()) &&
     hasProfileChanges &&
@@ -129,18 +130,18 @@ const Settings = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('You must be signed in to update your profile.', { type: 'error' })
       return
     }
 
     setIsSavingProfile(true)
     try {
-      const response = await updateProfile(
-        { name: profileData.name, email: profileData.email },
-        token
-      )
-      dispatch(setUser({ user: response.data.user, token }))
+      const response = await updateProfile({
+        name: profileData.name,
+        email: profileData.email,
+      })
+      dispatch(setUser({ user: response.data.user }))
       setProfileData({
         name: response.data.user?.name ?? '',
         email: response.data.user?.email ?? '',
@@ -189,7 +190,7 @@ const Settings = () => {
   )
 
   const canSubmitPassword =
-    Boolean(token) &&
+    isAuthenticated &&
     Boolean(passwordData.currentPassword) &&
     Boolean(passwordData.newPassword) &&
     Boolean(passwordData.confirmPassword) &&
@@ -204,7 +205,7 @@ const Settings = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('You must be signed in to change your password.', { type: 'error' })
       return
     }
@@ -223,14 +224,11 @@ const Settings = () => {
 
     setIsChangingPassword(true)
     try {
-      const response = await changePassword(
-        {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-          confirmPassword: passwordData.confirmPassword,
-        },
-        token
-      )
+      const response = await changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      })
       showToast(response.data?.message ?? 'Password updated successfully.', { type: 'success' })
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowPasswordForm(false)
@@ -249,18 +247,18 @@ const Settings = () => {
     return String(currency || 'ETB').toUpperCase() !== String(user?.currency || 'ETB').toUpperCase()
   }, [currency, user?.currency])
 
-  const canSavePreferences = Boolean(token) && hasPreferenceChanges && !isSavingPreferences
+  const canSavePreferences = isAuthenticated && hasPreferenceChanges && !isSavingPreferences
 
   const handlePreferencesSave = async () => {
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('You must be signed in to update preferences.', { type: 'error' })
       return
     }
 
     setIsSavingPreferences(true)
     try {
-      const response = await updateProfile({ currency }, token)
-      dispatch(setUser({ user: response.data.user, token }))
+      const response = await updateProfile({ currency })
+      dispatch(setUser({ user: response.data.user }))
       setCurrency(response.data.user?.currency ?? currency)
       showToast('Preferences updated successfully.', { type: 'success' })
     } catch (err) {
@@ -272,7 +270,7 @@ const Settings = () => {
   }
 
   const handleDeleteAccount = async () => {
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('You must be signed in to delete your account.', { type: 'error' })
       return
     }
@@ -283,7 +281,7 @@ const Settings = () => {
 
     setIsDeletingAccount(true)
     try {
-      const response = await deleteAccount({ password: deletePassword }, token)
+      const response = await deleteAccount({ password: deletePassword })
       showToast(response.data?.message ?? 'Account deleted successfully.', { type: 'success' })
       dispatch(clearUser())
       navigate('/signin')

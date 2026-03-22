@@ -26,7 +26,7 @@ const formatDateLabel = (value) => {
 
 const Transactions = () => {
   const dispatch = useDispatch()
-  const token = useSelector((state) => state.auth.token)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { transactions, loading: isLoading } = useSelector((state) => state.transactions)
   const { showToast } = useToast()
@@ -36,8 +36,8 @@ const Transactions = () => {
   const formatMoney = (value) => formatCurrency(value, currency)
 
   useEffect(() => {
-    if (!token) return
-    dispatch(fetchTransactions(token))
+    if (!isAuthenticated) return
+    dispatch(fetchTransactions())
       .unwrap()
       .catch((error) => {
         showToast(
@@ -45,7 +45,7 @@ const Transactions = () => {
           { type: 'error' }
         )
       })
-  }, [token, dispatch, showToast])
+  }, [isAuthenticated, dispatch, showToast])
 
   const filteredTransactions = useMemo(() => {
     const normalized = searchTerm.trim().toLowerCase()
@@ -69,7 +69,7 @@ const Transactions = () => {
   }, [searchTerm, transactions])
 
   const handleCreateTransaction = async (payload) => {
-    if (!token) {
+    if (!isAuthenticated) {
       const message = 'Please sign in again before adding a transaction.'
       showToast(message, { type: 'error' })
       throw new Error(message)
@@ -77,7 +77,7 @@ const Transactions = () => {
 
     setCreating(true)
     try {
-      await dispatch(addTransaction({ payload, token })).unwrap()
+      await dispatch(addTransaction(payload)).unwrap()
       showToast('Transaction saved to your ledger.', { type: 'success' })
     } catch (error) {
       const message = getServerMessage({ response: { data: { message: error } } }, 'Unable to save the transaction right now.')

@@ -9,9 +9,9 @@ import {
 
 export const fetchDashboardStats = createAsyncThunk(
   'admin/fetchDashboardStats',
-  async ({ token }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await getDashboardStats({ token })
+      const response = await getDashboardStats()
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch dashboard stats')
@@ -21,9 +21,9 @@ export const fetchDashboardStats = createAsyncThunk(
 
 export const fetchUserStats = createAsyncThunk(
   'admin/fetchUserStats',
-  async ({ token }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await getUserStats({ token })
+      const response = await getUserStats()
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch user stats')
@@ -33,9 +33,9 @@ export const fetchUserStats = createAsyncThunk(
 
 export const fetchAllUsers = createAsyncThunk(
   'admin/fetchAllUsers',
-  async ({ token }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await getAllUsers({ token })
+      const response = await getAllUsers()
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch users')
@@ -45,9 +45,9 @@ export const fetchAllUsers = createAsyncThunk(
 
 export const updateUserStatusAsync = createAsyncThunk(
   'admin/updateUserStatus',
-  async ({ token, userId, status }, { rejectWithValue }) => {
+  async ({ userId, status }, { rejectWithValue }) => {
     try {
-      const response = await updateUserStatus({ token, userId, status })
+      const response = await updateUserStatus({ userId, status })
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update user status')
@@ -57,9 +57,9 @@ export const updateUserStatusAsync = createAsyncThunk(
 
 export const deleteUserAsync = createAsyncThunk(
   'admin/deleteUser',
-  async ({ token, userId }, { rejectWithValue }) => {
+  async ({ userId }, { rejectWithValue }) => {
     try {
-      const response = await deleteUserAccount({ token, userId })
+      const response = await deleteUserAccount({ userId })
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete user')

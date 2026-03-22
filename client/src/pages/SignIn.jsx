@@ -104,9 +104,7 @@ const SignIn = () => {
         email: formData.email,
         password: formData.password,
       });
-      dispatch(
-        setUser({ user: response.data.user, token: response.data.token }),
-      );
+      dispatch(setUser({ user: response.data.user }));
       showToast('Signed in successfully', { type: 'success' });
       const destination =
         response.data.user?.role === 'admin'

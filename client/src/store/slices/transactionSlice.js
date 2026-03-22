@@ -3,9 +3,9 @@ import { createTransaction as createTransactionAPI, getTransactions as getTransa
 
 export const fetchTransactions = createAsyncThunk(
   'transactions/fetchTransactions',
-  async (token, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await getTransactionsAPI(token)
+      const response = await getTransactionsAPI()
       return response.data.transactions ?? []
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions')
@@ -15,9 +15,9 @@ export const fetchTransactions = createAsyncThunk(
 
 export const addTransaction = createAsyncThunk(
   'transactions/addTransaction',
-  async ({ payload, token }, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await createTransactionAPI(payload, token)
+      const response = await createTransactionAPI(payload)
       return response.data.transaction
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create transaction')

@@ -13,7 +13,8 @@ import { SECURITY_QUESTIONS } from '../../constants/securityQuestions';
 const SecurityQuestion = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { token, user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const { showToast } = useToast();
   const [selectedQuestion, setSelectedQuestion] = useState(SECURITY_QUESTIONS[0]);
   const [answer, setAnswer] = useState('');
@@ -29,7 +30,7 @@ const SecurityQuestion = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!token) {
+    if (!isAuthenticated) {
       showToast('Authentication is required to continue.', { type: 'error' });
       return;
     }
@@ -43,12 +44,12 @@ const SecurityQuestion = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await submitSecurityQuestion(
-        { question: selectedQuestion, answer: trimmedAnswer },
-        token,
-      );
+      const response = await submitSecurityQuestion({
+        question: selectedQuestion,
+        answer: trimmedAnswer,
+      });
 
-      dispatch(setUser({ user: response.data.user, token }));
+      dispatch(setUser({ user: response.data.user }));
       showToast('Security question saved. You are all set!', { type: 'success' });
       navigate('/dashboard', { replace: true });
     } catch (err) {

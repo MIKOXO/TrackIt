@@ -124,7 +124,7 @@ const formatStatValue = (value) => {
 const UserOversight = () => {
   const dispatch = useDispatch()
   const { showToast } = useToast()
-  const { token } = useSelector((state) => state.auth)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const { data: usersData, loading: usersLoading, error: usersError } = useSelector((state) => state.admin.users)
   const { data: userStatsData, loading: statsLoading, error: statsError } = useSelector((state) => state.admin.userStats)
 
@@ -137,10 +137,10 @@ const UserOversight = () => {
   const [pendingAction, setPendingAction] = useState(null)
 
   useEffect(() => {
-    if (!token) return
-    dispatch(fetchAllUsers({ token }))
-    dispatch(fetchUserStats({ token }))
-  }, [dispatch, token])
+    if (!isAuthenticated) return
+    dispatch(fetchAllUsers())
+    dispatch(fetchUserStats())
+  }, [dispatch, isAuthenticated])
 
   useEffect(() => {
     if (!usersData) {
@@ -235,7 +235,7 @@ const UserOversight = () => {
   const performAction = async () => {
     const { userId, mode } = confirm
     const user = localUsers.find((u) => String(u.id) === String(userId))
-    if (!user || user.role === 'admin' || !token) {
+    if (!user || user.role === 'admin' || !isAuthenticated) {
       closeConfirm()
       return
     }
@@ -245,18 +245,18 @@ const UserOversight = () => {
 
     try {
       if (mode === 'delete') {
-        await dispatch(deleteUserAsync({ token, userId })).unwrap()
-        showToast(`Deleted ${user.name}.`, { type: 'success' })
-      } else if (nextStatus) {
-        await dispatch(updateUserStatusAsync({ token, userId, status: nextStatus })).unwrap()
+        await dispatch(deleteUserAsync({ userId })).unwrap()
+      showToast(`Deleted ${user.name}.`, { type: 'success' })
+    } else if (nextStatus) {
+        await dispatch(updateUserStatusAsync({ userId, status: nextStatus })).unwrap()
         showToast(
           `${nextStatus === 'suspended' ? 'Suspended' : 'Re-activated'} ${user.name}.`,
           { type: 'success' }
         )
       }
 
-      dispatch(fetchAllUsers({ token }))
-      dispatch(fetchUserStats({ token }))
+      dispatch(fetchAllUsers())
+      dispatch(fetchUserStats())
     } catch (error) {
       showToast(error?.message || error || 'Action failed.', { type: 'error' })
     } finally {
@@ -297,9 +297,9 @@ const UserOversight = () => {
     (usersLoading && localUsers.length === 0) || (statsLoading && !userStatsData && localUsers.length === 0)
   const errorMessage = usersError || statsError
   const handleRetry = () => {
-    if (!token) return
-    dispatch(fetchAllUsers({ token }))
-    dispatch(fetchUserStats({ token }))
+    if (!isAuthenticated) return
+    dispatch(fetchAllUsers())
+    dispatch(fetchUserStats())
   }
 
   if (isInitialLoading) {

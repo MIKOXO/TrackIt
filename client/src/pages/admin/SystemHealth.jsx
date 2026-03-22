@@ -83,17 +83,16 @@ const StatCard = ({ label, value, note, icon: Icon }) => (
 
 const SystemHealth = () => {
   const dispatch = useDispatch()
-  const { token } = useSelector((state) => state.auth)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const { dashboard } = useSelector((state) => state.admin)
   const { data: dashboardData, loading, error } = dashboard
   const [range, setRange] = useState('24h')
   const [cachedData, setCachedData] = useState(null)
 
   useEffect(() => {
-    if (token) {
-      dispatch(fetchDashboardStats({ token }))
-    }
-  }, [dispatch, token])
+    if (!isAuthenticated) return
+    dispatch(fetchDashboardStats())
+  }, [dispatch, isAuthenticated])
 
   useEffect(() => {
     if (dashboardData) {
@@ -126,7 +125,7 @@ const SystemHealth = () => {
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
         <p className="text-rose-700 dark:text-rose-200">Error loading system telemetry: {error}</p>
         <button
-          onClick={() => dispatch(fetchDashboardStats({ token }))}
+                  onClick={() => dispatch(fetchDashboardStats())}
           className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500"
         >
           Retry
@@ -180,7 +179,7 @@ const SystemHealth = () => {
             <p>Error refreshing data: {error}</p>
             <button
               type="button"
-              onClick={() => dispatch(fetchDashboardStats({ token }))}
+              onClick={() => dispatch(fetchDashboardStats())}
               className="rounded-xl border border-rose-200 bg-white px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
             >
               Retry
@@ -217,7 +216,7 @@ const SystemHealth = () => {
           </div>
           <button
             type="button"
-            onClick={() => dispatch(fetchDashboardStats({ token }))}
+            onClick={() => dispatch(fetchDashboardStats())}
             disabled={loading}
             className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 shadow-sm shadow-black/5 transition hover:border-slate-300 hover:text-slate-800 disabled:cursor-wait disabled:opacity-60 dark:border-trackit-border dark:bg-slate-900/50 dark:text-slate-300 dark:hover:border-slate-600"
           >

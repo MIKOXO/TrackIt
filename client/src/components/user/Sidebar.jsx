@@ -17,6 +17,7 @@ import { clearUser } from '../../store/slices/authSlice';
 import { clearAnalytics } from '../../store/slices/analyticsSlice';
 import { clearTransactions } from '../../store/slices/transactionSlice';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../../services/authService.js';
 
 const defaultMenuItems = [
   { icon: FiHome, label: 'Overview', path: '/dashboard' },
@@ -36,12 +37,15 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch {
+      // Continue clearing state even if the request fails.
+    }
     dispatch(clearUser());
     dispatch(clearAnalytics())
     dispatch(clearTransactions());
-    window.localStorage.removeItem('trackitToken');
-    window.localStorage.removeItem('trackitUser');
     navigate('/', { replace: true });
   };
 

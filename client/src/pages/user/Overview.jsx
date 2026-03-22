@@ -9,15 +9,15 @@ import { formatCurrency } from '../../utils/currencyUtils.js'
 const Overview = () => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
-  const token = useSelector((state) => state.auth.token)
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
   const currency = useSelector((state) => state.auth.user?.currency ?? 'ETB')
   const { transactions, loading } = useSelector((state) => state.transactions)
 
   useEffect(() => {
-    if (token && transactions.length === 0) {
-      dispatch(fetchTransactions(token))
+    if (isAuthenticated && transactions.length === 0) {
+      dispatch(fetchTransactions())
     }
-  }, [token, dispatch, transactions.length])
+  }, [isAuthenticated, dispatch, transactions.length])
 
   const totalIncome = transactions
     .filter((t) => t.type === 'income')

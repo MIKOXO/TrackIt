@@ -1,39 +1,18 @@
 import apiClient from './apiClient.js';
 
-const withAuthHeader = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-export const getDashboardStats = ({ token } = {}) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to fetch dashboard stats.'));
-  }
-
-  return apiClient.get('/api/admin/dashboard', withAuthHeader(token));
+export const getDashboardStats = () => {
+  return apiClient.get('/api/admin/dashboard');
 };
 
-export const getUserStats = ({ token } = {}) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to fetch user stats.'));
-  }
-
-  return apiClient.get('/api/admin/users/stats', withAuthHeader(token));
+export const getUserStats = () => {
+  return apiClient.get('/api/admin/users/stats');
 };
 
-export const getAllUsers = ({ token } = {}) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to fetch users.'));
-  }
-
-  return apiClient.get('/api/admin/users', withAuthHeader(token));
+export const getAllUsers = () => {
+  return apiClient.get('/api/admin/users');
 };
 
-export const updateUserStatus = ({ token, userId, status } = {}) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to update a user.'));
-  }
+export const updateUserStatus = ({ userId, status } = {}) => {
   if (!userId) {
     return Promise.reject(new Error('User ID is required to update status.'));
   }
@@ -41,20 +20,13 @@ export const updateUserStatus = ({ token, userId, status } = {}) => {
     return Promise.reject(new Error('Invalid status value.'));
   }
 
-  return apiClient.patch(
-    `/api/admin/users/${userId}/status`,
-    { status },
-    withAuthHeader(token)
-  );
+  return apiClient.patch(`/api/admin/users/${userId}/status`, { status });
 };
 
-export const deleteUserAccount = ({ token, userId } = {}) => {
-  if (!token) {
-    return Promise.reject(new Error('Authentication token is required to delete a user.'));
-  }
+export const deleteUserAccount = ({ userId } = {}) => {
   if (!userId) {
     return Promise.reject(new Error('User ID is required to delete an account.'));
   }
 
-  return apiClient.delete(`/api/admin/users/${userId}`, withAuthHeader(token));
+  return apiClient.delete(`/api/admin/users/${userId}`);
 };
