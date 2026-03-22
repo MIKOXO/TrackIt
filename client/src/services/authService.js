@@ -1,4 +1,4 @@
-import apiClient from './apiClient.js';
+import apiClient, { clearCsrfToken } from './apiClient.js';
 
 export const register = (payload) => apiClient.post('/api/auth/register', payload);
 export const login = (payload) => apiClient.post('/api/auth/login', payload);
@@ -32,5 +32,8 @@ export const resetPasswordWithToken = (payload) => {
 };
 
 export const logout = () => {
-  return apiClient.post('/api/auth/logout');
+  return apiClient.post('/api/auth/logout').then((response) => {
+    clearCsrfToken();
+    return response;
+  });
 };

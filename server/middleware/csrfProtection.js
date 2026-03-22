@@ -17,6 +17,8 @@ const csrfProtection = (req, res, next) => {
     return next({ status: 403, message: 'Invalid CSRF token.' });
   }
 
+  res.setHeader(CSRF_HEADER_NAME, cookieToken);
+
   next();
 };
 

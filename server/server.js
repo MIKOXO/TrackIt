@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import apiRouter from './routes/index.js';
 import errorHandler from './middleware/errorHandler.js';
+import { CSRF_HEADER_NAME } from './constants/authCookies.js';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ const corsOptions = {
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  exposedHeaders: [CSRF_HEADER_NAME],
 };
 
 const PORT = process.env.PORT || 4000;

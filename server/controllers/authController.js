@@ -59,8 +59,11 @@ const PASSWORD_REQUIREMENTS = [
 const createCsrfToken = () => crypto.randomBytes(32).toString('hex');
 
 const attachAuthCookies = (res, token) => {
+  const csrfToken = createCsrfToken();
   res.cookie(AUTH_COOKIE_NAME, token, AUTH_COOKIE_OPTIONS);
-  res.cookie(CSRF_COOKIE_NAME, createCsrfToken(), CSRF_COOKIE_OPTIONS);
+  res.cookie(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
+  res.setHeader(CSRF_HEADER_NAME, csrfToken);
+  return csrfToken;
 };
 
 const clearAuthCookies = (res) => {
@@ -125,10 +128,11 @@ export const register = async (req, res, next) => {
       role: 'user',
     });
     const token = generateToken({ userId: user._id, role: user.role });
-    attachAuthCookies(res, token);
+    const csrfToken = attachAuthCookies(res, token);
 
     res.status(201).json({
       user: buildUserPayload(user),
+      csrfToken,
     });
   } catch (error) {
     if (error?.code === 11000) {
@@ -166,9 +170,10 @@ export const login = async (req, res, next) => {
     }
 
     const token = generateToken({ userId: user._id, role: user.role });
-    attachAuthCookies(res, token);
+    const csrfToken = attachAuthCookies(res, token);
     res.json({
       user: buildUserPayload(user),
+      csrfToken,
     });
   } catch (error) {
     next(error);
