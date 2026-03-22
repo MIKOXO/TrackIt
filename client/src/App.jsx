@@ -1,29 +1,37 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import SignUp from './pages/SignUp.jsx'
-import SignIn from './pages/SignIn.jsx'
-import AdminDashboard from './pages/admin/Dashboard.jsx'
-import AdminLayout from './pages/admin/AdminLayout.jsx'
-import UserOversight from './pages/admin/UserOversight.jsx'
-import SystemHealth from './pages/admin/SystemHealth.jsx'
-import UserLayout from './pages/user/UserLayout.jsx'
-import Overview from './pages/user/Overview.jsx'
-import Transactions from './pages/user/Transactions.jsx'
-import Analytics from './pages/user/Analytics.jsx'
-import Settings from './pages/user/Settings.jsx'
-import AIAssistant from './pages/user/AIAssistant.jsx'
-import SecurityQuestion from './pages/user/SecurityQuestion.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
-import ResetPassword from './pages/ResetPassword.jsx'
 import RoleGate from './components/auth/RoleGate.jsx'
 import SecurityGate from './components/auth/SecurityGate.jsx'
-import NotFound from './pages/NotFound.jsx'
+import LoadingIndicator from './components/ui/LoadingIndicator.jsx'
 
-const App = () => {
-  return (
-    <BrowserRouter>
-        <Routes>
+const Home = lazy(() => import('./pages/Home.jsx'))
+const SignUp = lazy(() => import('./pages/SignUp.jsx'))
+const SignIn = lazy(() => import('./pages/SignIn.jsx'))
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout.jsx'))
+const UserOversight = lazy(() => import('./pages/admin/UserOversight.jsx'))
+const SystemHealth = lazy(() => import('./pages/admin/SystemHealth.jsx'))
+const UserLayout = lazy(() => import('./pages/user/UserLayout.jsx'))
+const Overview = lazy(() => import('./pages/user/Overview.jsx'))
+const Transactions = lazy(() => import('./pages/user/Transactions.jsx'))
+const Analytics = lazy(() => import('./pages/user/Analytics.jsx'))
+const Settings = lazy(() => import('./pages/user/Settings.jsx'))
+const AIAssistant = lazy(() => import('./pages/user/AIAssistant.jsx'))
+const SecurityQuestion = lazy(() => import('./pages/user/SecurityQuestion.jsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const NotFound = lazy(() => import('./pages/NotFound.jsx'))
+
+const LoadingFallback = () => (
+  <div className="flex min-h-[60vh] items-center justify-center">
+    <LoadingIndicator />
+  </div>
+)
+
+const App = () => (
+  <BrowserRouter>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
@@ -53,9 +61,9 @@ const App = () => {
           <Route path="reports" element={<Navigate replace to="/admin/dashboard" />} />
         </Route>
         <Route path="*" element={<NotFound />} />
-        </Routes>
-    </BrowserRouter>
-  )
-}
+      </Routes>
+    </Suspense>
+  </BrowserRouter>
+)
 
 export default App
