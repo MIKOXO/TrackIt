@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import ChatHistory from '../models/ChatHistory.js';
 import SECURITY_QUESTIONS from '../constants/securityQuestions.js';
 
 const SUPPORTED_CURRENCIES = new Set([
@@ -456,6 +458,41 @@ export const setSecurityQuestion = async (req, res, next) => {
       message: 'Security question saved.',
       user: buildUserPayload(user),
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCurrentUser = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return next({ status: 401, message: 'Not authenticated.' });
+    }
+
+    const password = String(req.body.password ?? '');
+    if (!password) {
+      return next({ status: 400, message: 'Password is required.' });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return next({ status: 404, message: 'User not found.' });
+    }
+
+    if (user.role === 'admin') {
+      return next({ status: 403, message: 'Cannot delete an administrator account.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next({ status: 401, message: 'Password is incorrect.' });
+    }
+
+    await Transaction.deleteMany({ user: user._id });
+    await ChatHistory.deleteMany({ user: user._id });
+    await user.deleteOne();
+
+    res.json({ message: 'Account deleted successfully.' });
   } catch (error) {
     next(error);
   }

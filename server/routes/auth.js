@@ -9,6 +9,7 @@ import {
   fetchSecurityQuestionByEmail,
   verifySecurityAnswerForReset,
   resetPasswordWithToken,
+  deleteCurrentUser,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -18,6 +19,7 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getCurrentUser);
 router.put('/me', protect, updateCurrentUser);
+router.delete('/me', protect, deleteCurrentUser);
 router.put('/password', protect, changePassword);
 router.post('/security-question', protect, setSecurityQuestion);
 router.post('/forgot-password/question', fetchSecurityQuestionByEmail);

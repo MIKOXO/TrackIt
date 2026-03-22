@@ -23,6 +23,19 @@ export const changePassword = (payload, token) => {
   return apiClient.put('/api/auth/password', payload, withAuthHeader(token));
 };
 
+export const deleteAccount = (payload, token) => {
+  if (!token) {
+    return Promise.reject(new Error('Authentication token is required to delete account.'));
+  }
+  if (!payload?.password) {
+    return Promise.reject(new Error('Password is required to delete account.'));
+  }
+  return apiClient.delete('/api/auth/me', {
+    ...withAuthHeader(token),
+    data: { password: payload.password },
+  });
+};
+
 export const setSecurityQuestion = (payload, token) => {
   if (!token) {
     return Promise.reject(new Error('Authentication token is required.'));
