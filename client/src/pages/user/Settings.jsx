@@ -8,6 +8,7 @@ import { useToast } from '../../components/ui/ToastProvider.jsx'
 import { getServerMessage } from '../../utils/errorUtils.js'
 import LoadingIndicator from '../../components/ui/LoadingIndicator.jsx'
 import DropdownSelect from '../../components/ui/DropdownSelect'
+import { getPrimaryButtonClass } from '../../components/ui/buttonStyles.js'
 
 const PASSWORD_REQUIREMENTS = [
   {
@@ -357,9 +358,7 @@ const Settings = () => {
                   type="submit"
                   disabled={!canSaveProfile}
                   aria-busy={isSavingProfile}
-                  className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-trackit-accent to-emerald-500 px-6 py-3 font-semibold text-white shadow-lg shadow-emerald-500/40 transition ${
-                    canSaveProfile ? 'hover:shadow-xl' : 'cursor-not-allowed opacity-80 shadow-none'
-                  }`}
+                  className={`${getPrimaryButtonClass(!canSaveProfile)} w-auto px-6`}
                 >
                   {isSavingProfile ? (
                     <>
@@ -517,11 +516,7 @@ const Settings = () => {
                       type="submit"
                       disabled={!canSubmitPassword}
                       aria-busy={isChangingPassword}
-                      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-trackit-accent to-emerald-500 px-6 py-3 font-semibold text-white shadow-lg shadow-emerald-500/40 transition ${
-                        canSubmitPassword
-                          ? 'hover:shadow-xl'
-                          : 'cursor-not-allowed opacity-80 shadow-none'
-                      }`}
+                      className={`${getPrimaryButtonClass(!canSubmitPassword)} w-auto px-6`}
                     >
                       {isChangingPassword ? (
                         <>
@@ -586,11 +581,7 @@ const Settings = () => {
                     onClick={handlePreferencesSave}
                     disabled={!canSavePreferences}
                     aria-busy={isSavingPreferences}
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-trackit-accent to-emerald-500 px-6 py-3 font-semibold text-white shadow-lg shadow-emerald-500/40 transition ${
-                      canSavePreferences
-                        ? 'hover:shadow-xl'
-                        : 'cursor-not-allowed opacity-80 shadow-none'
-                    }`}
+                    className={`${getPrimaryButtonClass(!canSavePreferences)} w-auto px-6`}
                   >
                     {isSavingPreferences ? (
                       <>
