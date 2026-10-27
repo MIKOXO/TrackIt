@@ -6,6 +6,8 @@ const connectDB = async () => {
     throw new Error('MONGODB_URI is required to connect to the database.');
   }
 
+  mongoose.set('sanitizeFilter', true);
+
   try {
     await mongoose.connect(uri);
     console.log('MongoDB connected');

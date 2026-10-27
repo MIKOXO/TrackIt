@@ -21,9 +21,12 @@ export const protect = async (req, res, next) => {
       return next({ status: 401, message: 'Authorization credentials are required.' });
     }
     const decoded = verifyToken(token);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).select('+tokenVersion');
     if (!user) {
       return next({ status: 401, message: 'User not found for given token.' });
+    }
+    if (user.tokenVersion !== decoded.tokenVersion) {
+      return next({ status: 401, message: 'Session expired. Please sign in again.' });
     }
     if (user.status === 'suspended') {
       return next({ status: 403, message: 'User account is suspended.' });
@@ -35,7 +38,6 @@ export const protect = async (req, res, next) => {
       email: user.email,
       currency: user.currency ?? 'ETB',
       role: user.role,
-      securityQuestionSet: Boolean(user.securityQuestionSet),
     };
     next();
   } catch (error) {

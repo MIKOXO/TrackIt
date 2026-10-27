@@ -4,10 +4,12 @@ const CSRF_HEADER_NAME = 'x-csrf-token';
 const AUTH_COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 1 day
 const isProduction = process.env.NODE_ENV === 'production';
 
+const sameSiteSetting = isProduction ? 'none' : 'lax';
+
 const createCookieOptions = ({ httpOnly }) => ({
   httpOnly,
   secure: isProduction,
-  sameSite: 'none',
+  sameSite: sameSiteSetting,
   maxAge: AUTH_COOKIE_MAX_AGE_MS,
 });
 
@@ -16,12 +18,12 @@ export const CSRF_COOKIE_OPTIONS = createCookieOptions({ httpOnly: false });
 export const AUTH_COOKIE_CLEAR_OPTIONS = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: 'none',
+  sameSite: sameSiteSetting,
 };
 export const CSRF_COOKIE_CLEAR_OPTIONS = {
   httpOnly: false,
   secure: isProduction,
-  sameSite: 'none',
+  sameSite: sameSiteSetting,
 };
 
 export {
