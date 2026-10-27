@@ -5,9 +5,11 @@ import transactionRouter from './transactions.js';
 import analyticsRouter from './analytics.js';
 import adminRouter from './admin.js';
 import assistantRouter from './assistant.js';
+import { globalLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
+router.use(globalLimiter);
 router.get('/status', getStatus);
 router.use('/auth', authRouter);
 router.use('/transactions', transactionRouter);
