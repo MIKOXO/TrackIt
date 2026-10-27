@@ -6,6 +6,8 @@ import LoadingIndicator from './components/ui/LoadingIndicator.jsx'
 const Home = lazy(() => import('./pages/Home.jsx'))
 const SignUp = lazy(() => import('./pages/SignUp.jsx'))
 const SignIn = lazy(() => import('./pages/SignIn.jsx'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout.jsx'))
 const UserOversight = lazy(() => import('./pages/admin/UserOversight.jsx'))
@@ -31,6 +33,8 @@ const App = () => (
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           element={
             <RoleGate allowedRoles={['user']} redirectTo="/admin/dashboard">

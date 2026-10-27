@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiEye, FiEyeOff, FiCheck, FiX } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
-import { setUser, setLoading, setError } from '../store/slices/authSlice';
+import { setLoading, setError } from '../store/slices/authSlice';
 import Navbar from '../components/layout/Navbar.jsx';
 import Footer from '../components/layout/Footer.jsx';
 import { Link, useNavigate } from 'react-router-dom';
@@ -108,9 +108,14 @@ const SignUp = () => {
         email: formData.email,
         password: formData.password,
       });
-      dispatch(setUser({ user: response.data.user }));
-      showToast('Account created successfully', { type: 'success' });
-      navigate('/dashboard', { replace: true });
+      showToast(
+        response.data.message || 'Account created. Check your email for a code.',
+        { type: 'success' },
+      );
+      navigate('/verify-email', {
+        replace: true,
+        state: { email: formData.email.trim(), codeSent: true },
+      });
     } catch (err) {
       const message = getServerMessage(err, 'Unable to create account. Try again shortly.');
       dispatch(setError(message));
@@ -123,6 +128,7 @@ const SignUp = () => {
       });
     } finally {
       setIsSubmitting(false);
+      dispatch(setLoading(false));
     }
   };
 

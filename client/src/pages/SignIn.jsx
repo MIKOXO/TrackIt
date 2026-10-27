@@ -7,7 +7,7 @@ import { HiOutlineSparkles } from 'react-icons/hi';
 import { setUser, setLoading, setError } from '../store/slices/authSlice';
 import Navbar from '../components/layout/Navbar.jsx';
 import Footer from '../components/layout/Footer.jsx';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
@@ -48,13 +48,14 @@ const SuspendedAccountModal = ({ open, heading, message, onClose }) => (
 
 const SignIn = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    email: location.state?.email ?? '',
     password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
   const { showToast } = useToast();
   const [fieldErrors, setFieldErrors] = useState({
@@ -116,6 +117,17 @@ const SignIn = () => {
         err,
         'Unable to sign in. Check your credentials.',
       );
+
+      if (err.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        dispatch(setError(null));
+        showToast(message, { type: 'info' });
+        navigate('/verify-email', {
+          replace: true,
+          state: { email: formData.email.trim(), codeSent: true },
+        });
+        return;
+      }
+
       dispatch(setError(message));
       showToast(message, { type: 'error' });
       const normalized = message.toLowerCase();
@@ -136,6 +148,7 @@ const SignIn = () => {
       });
     } finally {
       setIsSubmitting(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -229,12 +242,7 @@ const SignIn = () => {
                   className='flex items-center justify-between'>
                   <button
                     type='button'
-                    title='Coming soon'
-                    onClick={() =>
-                      showToast('Password recovery by email is coming soon.', {
-                        type: 'info',
-                      })
-                    }
+                    onClick={() => navigate('/forgot-password')}
                     className='text-sm font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer'>
                     Forgot password?
                   </button>
