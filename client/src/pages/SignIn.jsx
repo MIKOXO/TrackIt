@@ -110,12 +110,7 @@ const SignIn = () => {
         response.data.user?.role === 'admin'
           ? '/admin/dashboard'
           : '/dashboard';
-      const finalDestination =
-        response.data.user?.role !== 'admin' &&
-        !response.data.user?.securityQuestionSet
-          ? '/security-question'
-          : destination;
-      navigate(finalDestination, { replace: true });
+      navigate(destination, { replace: true });
     } catch (err) {
       const message = getServerMessage(
         err,
@@ -232,11 +227,17 @@ const SignIn = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
                   className='flex items-center justify-between'>
-                  <Link
-                    to='/forgot-password'
-                    className='text-sm font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'>
+                  <button
+                    type='button'
+                    title='Coming soon'
+                    onClick={() =>
+                      showToast('Password recovery by email is coming soon.', {
+                        type: 'info',
+                      })
+                    }
+                    className='text-sm font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer'>
                     Forgot password?
-                  </Link>
+                  </button>
                 </motion.div>
 
                 {/* Submit Button */}

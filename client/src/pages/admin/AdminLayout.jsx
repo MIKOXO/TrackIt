@@ -41,6 +41,7 @@ const GuardedMessage = ({ title, description, actionLabel, actionLink }) => (
 
 const AdminLayout = () => {
   const dispatch = useDispatch()
+  const location = useLocation()
   const { user, isAuthenticated } = useSelector((state) => state.auth)
   const isAdmin = user?.role === 'admin'
   const sidebarOpen = useSelector((state) => state.layout.sidebarOpen)
@@ -69,7 +70,6 @@ const AdminLayout = () => {
     )
   }
 
-  const location = useLocation()
   const currentPage = adminSidebarItems.find((item) => item.path === location.pathname)
   const pageHeader = currentPage?.header || 'Dashboard'
 

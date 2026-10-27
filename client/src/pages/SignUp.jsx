@@ -110,7 +110,7 @@ const SignUp = () => {
       });
       dispatch(setUser({ user: response.data.user }));
       showToast('Account created successfully', { type: 'success' });
-      navigate('/security-question', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const message = getServerMessage(err, 'Unable to create account. Try again shortly.');
       dispatch(setError(message));
