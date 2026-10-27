@@ -5,7 +5,10 @@ import {
   getCurrentUser,
   updateCurrentUser,
   changePassword,
-  passwordResetUnavailable,
+  verifyEmail,
+  resendOtp,
+  forgotPassword,
+  resetPassword,
   deleteCurrentUser,
   logout,
 } from '../controllers/authController.js';
@@ -17,6 +20,10 @@ import {
   passwordLimiter,
   passwordResetIpLimiter,
   passwordResetEmailLimiter,
+  otpSendEmailLimiter,
+  otpSendIpLimiter,
+  forgotPasswordIpLimiter,
+  forgotPasswordEmailLimiter,
 } from '../middleware/rateLimiter.js';
 import validate from '../middleware/validate.js';
 import {
@@ -25,12 +32,38 @@ import {
   updateProfileSchema,
   changePasswordSchema,
   deleteAccountSchema,
+  verifyEmailSchema,
+  resendOtpSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '../validation/authSchemas.js';
 
 const router = express.Router();
 
 router.post('/register', registerLimiter, validate(registerSchema), register);
 router.post('/login', loginLimiter, validate(loginSchema), login);
+router.post('/verify-email', validate(verifyEmailSchema), verifyEmail);
+router.post(
+  '/resend-otp',
+  otpSendIpLimiter,
+  otpSendEmailLimiter,
+  validate(resendOtpSchema),
+  resendOtp
+);
+router.post(
+  '/forgot-password',
+  forgotPasswordIpLimiter,
+  forgotPasswordEmailLimiter,
+  validate(forgotPasswordSchema),
+  forgotPassword
+);
+router.post(
+  '/reset-password',
+  passwordResetIpLimiter,
+  passwordResetEmailLimiter,
+  validate(resetPasswordSchema),
+  resetPassword
+);
 router.get('/me', protect, csrfProtection, getCurrentUser);
 router.put('/me', protect, csrfProtection, validate(updateProfileSchema), updateCurrentUser);
 router.delete(
@@ -48,24 +81,6 @@ router.put(
   passwordLimiter,
   validate(changePasswordSchema),
   changePassword
-);
-router.post(
-  '/forgot-password/question',
-  passwordResetIpLimiter,
-  passwordResetEmailLimiter,
-  passwordResetUnavailable
-);
-router.post(
-  '/forgot-password',
-  passwordResetIpLimiter,
-  passwordResetEmailLimiter,
-  passwordResetUnavailable
-);
-router.post(
-  '/reset-password',
-  passwordResetIpLimiter,
-  passwordResetEmailLimiter,
-  passwordResetUnavailable
 );
 router.post('/logout', protect, csrfProtection, logout);
 

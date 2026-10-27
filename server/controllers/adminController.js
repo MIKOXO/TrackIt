@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
+import Otp from '../models/Otp.js';
 
 const SYSTEM_HEALTH_RANGES = {
   '1h': { steps: 60, stepMs: 60 * 1000, unit: 'minute' },
@@ -321,6 +322,7 @@ export const deleteUser = async (req, res, next) => {
     }
 
     await Transaction.deleteMany({ user: user._id });
+    await Otp.deleteMany({ email: user.email });
     await user.deleteOne();
 
     res.json({ userId: id, message: 'User deleted successfully.' });

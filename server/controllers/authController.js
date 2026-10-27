@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import ChatHistory from '../models/ChatHistory.js';
+import Otp from '../models/Otp.js';
+import { consumeOtp, issueOtp, normalizeEmail } from '../services/otpService.js';
 import {
   AUTH_COOKIE_NAME,
   CSRF_COOKIE_NAME,
@@ -110,7 +112,14 @@ const buildUserPayload = (user) => ({
   email: user.email,
   currency: user.currency ?? 'ETB',
   role: user.role,
+  emailVerified: Boolean(user.emailVerified),
 });
+
+const GENERIC_PASSWORD_RESET_MESSAGE =
+  'If an account exists for that email, a password reset code has been sent.';
+
+const EMAIL_NOT_VERIFIED_MESSAGE =
+  'Verify your email address to continue. Check your inbox for your verification code.';
 
 export const register = async (req, res, next) => {
   try {
@@ -133,13 +142,22 @@ export const register = async (req, res, next) => {
       email,
       password: hashedPassword,
       role: 'user',
+      emailVerified: false,
     });
-    const token = signAuthToken(user);
-    const csrfToken = attachAuthCookies(res, token);
+
+    try {
+      await issueOtp({ email: user.email, purpose: 'verify_email' });
+    } catch (error) {
+      if (!['OTP_COOLDOWN', 'OTP_RATE_LIMITED'].includes(error?.code)) {
+        await Otp.deleteMany({ email: user.email }).catch(() => {});
+        await user.deleteOne().catch(() => {});
+        return next(error);
+      }
+    }
 
     res.status(201).json({
       user: buildUserPayload(user),
-      csrfToken,
+      message: 'Account created. Check your email for a verification code.',
     });
   } catch (error) {
     if (error?.code === 11000) {
@@ -171,6 +189,21 @@ export const login = async (req, res, next) => {
       return next({ status: 401, message: 'Invalid email or password.' });
     }
 
+    if (!user.emailVerified) {
+      try {
+        await issueOtp({ email: user.email, purpose: 'verify_email' });
+      } catch (error) {
+        if (!['OTP_COOLDOWN', 'OTP_RATE_LIMITED'].includes(error?.code)) {
+          return next(error);
+        }
+      }
+      return next({
+        status: 403,
+        code: 'EMAIL_NOT_VERIFIED',
+        message: EMAIL_NOT_VERIFIED_MESSAGE,
+      });
+    }
+
     const token = signAuthToken(user);
     const csrfToken = attachAuthCookies(res, token);
     res.json({
@@ -194,6 +227,7 @@ export const getCurrentUser = (req, res) => {
       email: req.user.email,
       currency: req.user.currency ?? 'ETB',
       role: req.user.role,
+      emailVerified: Boolean(req.user.emailVerified),
     },
   });
 };
@@ -322,10 +356,130 @@ export const changePassword = async (req, res, next) => {
   }
 };
 
-export const passwordResetUnavailable = (req, res) => {
-  res.status(503).json({
-    message: 'Password reset is temporarily unavailable. Email-based one-time-code recovery is coming soon.',
-  });
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code ?? '');
+
+    await consumeOtp({ email, purpose: 'verify_email', code });
+
+    const user = await User.findOne({ email }).select('+tokenVersion');
+    if (!user) {
+      return next({
+        status: 400,
+        code: 'OTP_INVALID',
+        message: 'That verification code is invalid. Request a new code and try again.',
+      });
+    }
+
+    if (user.status === 'suspended') {
+      return next({
+        status: 403,
+        message: `Your account has been suspended. Contact ${SUPPORT_EMAIL} for more info.`,
+      });
+    }
+
+    if (!user.emailVerified) {
+      user.emailVerified = true;
+      await user.save();
+    }
+
+    const token = signAuthToken(user);
+    const csrfToken = attachAuthCookies(res, token);
+
+    res.json({
+      user: buildUserPayload(user),
+      csrfToken,
+      message: 'Email verified successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendOtp = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const { purpose } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user || (purpose === 'verify_email' && user.emailVerified)) {
+      return res.json({
+        message: 'If that email needs a verification code, one has been sent.',
+      });
+    }
+
+    try {
+      await issueOtp({ email, purpose });
+    } catch (error) {
+      if (error?.code === 'EMAIL_SEND_FAILED') {
+        return res.json({
+          message: 'If that email needs a verification code, one has been sent.',
+        });
+      }
+      throw error;
+    }
+
+    res.json({ message: 'A new verification code has been sent.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const user = await User.findOne({ email });
+
+    if (user) {
+      try {
+        await issueOtp({ email, purpose: 'reset_password' });
+      } catch (error) {
+        console.error('Unable to send password reset code', {
+          code: error?.code,
+          status: error?.status,
+        });
+      }
+    }
+
+    res.json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code ?? '');
+    const newPassword = String(req.body.newPassword ?? '');
+
+    const { isValid, unmet } = getPasswordValidation(newPassword);
+    if (!isValid) {
+      const message = `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`;
+      return next({ status: 400, message });
+    }
+
+    await consumeOtp({ email, purpose: 'reset_password', code });
+
+    const user = await User.findOne({ email }).select('+tokenVersion');
+    if (!user) {
+      return next({
+        status: 400,
+        code: 'OTP_INVALID',
+        message: 'That reset code is invalid. Request a new code and try again.',
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+    await user.save();
+    clearAuthCookies(res);
+
+    res.json({ message: 'Password reset successfully. Sign in with your new password.' });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const logout = (req, res) => {
@@ -360,6 +514,7 @@ export const deleteCurrentUser = async (req, res, next) => {
 
     await Transaction.deleteMany({ user: user._id });
     await ChatHistory.deleteMany({ user: user._id });
+    await Otp.deleteMany({ email: user.email });
     await user.deleteOne();
     clearAuthCookies(res);
 
