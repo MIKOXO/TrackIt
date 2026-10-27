@@ -1,7 +1,6 @@
 import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import RoleGate from './components/auth/RoleGate.jsx'
-import SecurityGate from './components/auth/SecurityGate.jsx'
 import LoadingIndicator from './components/ui/LoadingIndicator.jsx'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
@@ -17,9 +16,6 @@ const Transactions = lazy(() => import('./pages/user/Transactions.jsx'))
 const Analytics = lazy(() => import('./pages/user/Analytics.jsx'))
 const Settings = lazy(() => import('./pages/user/Settings.jsx'))
 const AIAssistant = lazy(() => import('./pages/user/AIAssistant.jsx'))
-const SecurityQuestion = lazy(() => import('./pages/user/SecurityQuestion.jsx'))
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
-const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
 const NotFound = lazy(() => import('./pages/NotFound.jsx'))
 
 const LoadingFallback = () => (
@@ -35,14 +31,10 @@ const App = () => (
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           element={
             <RoleGate allowedRoles={['user']} redirectTo="/admin/dashboard">
-              <SecurityGate>
-                <UserLayout />
-              </SecurityGate>
+              <UserLayout />
             </RoleGate>
           }
         >
@@ -51,7 +43,6 @@ const App = () => (
           <Route path="/dashboard/analytics" element={<Analytics />} />
           <Route path="/dashboard/ai-assistant" element={<AIAssistant />} />
           <Route path="/dashboard/settings" element={<Settings />} />
-          <Route path="/security-question" element={<SecurityQuestion />} />
         </Route>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate replace to="dashboard" />} />
