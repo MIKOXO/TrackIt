@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { FiTrendingUp, FiChevronLeft } from 'react-icons/fi'
 import { HiOutlineMoon, HiOutlineSun } from 'react-icons/hi'
 import { useSelector, useDispatch } from 'react-redux'

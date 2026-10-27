@@ -75,7 +75,8 @@ const AddTransactionModal = ({ isOpen, onClose, onCreate, isSubmitting }) => {
 
     const timerId = setTimeout(() => {
       setFieldErrors((prev) => {
-        const { amount, ...rest } = prev;
+        const rest = { ...prev };
+        delete rest.amount;
         return rest;
       });
     }, 4000);
