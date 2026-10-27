@@ -31,6 +31,13 @@ export const protect = async (req, res, next) => {
     if (user.status === 'suspended') {
       return next({ status: 403, message: 'User account is suspended.' });
     }
+    if (!user.emailVerified) {
+      return next({
+        status: 403,
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Verify your email address to continue.',
+      });
+    }
 
     req.user = {
       id: user._id,
@@ -38,6 +45,7 @@ export const protect = async (req, res, next) => {
       email: user.email,
       currency: user.currency ?? 'ETB',
       role: user.role,
+      emailVerified: Boolean(user.emailVerified),
     };
     next();
   } catch (error) {

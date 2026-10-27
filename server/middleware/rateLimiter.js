@@ -62,6 +62,18 @@ const rateLimitConfig = {
     limit: readPositiveNumber('RATE_LIMIT_PASSWORD_RESET_EMAIL_MAX', 5),
     message: 'Too many password reset attempts for this account. Please try again later.',
   },
+  otpSendEmail: {
+    keyPrefix: 'otp-send-email',
+    windowMs: readPositiveNumber('RATE_LIMIT_OTP_SEND_WINDOW_MS', 60 * MINUTE_MS),
+    limit: readPositiveNumber('RATE_LIMIT_OTP_SEND_MAX', 5),
+    message: 'Too many verification codes requested. Please try again later.',
+  },
+  otpSendIp: {
+    keyPrefix: 'otp-send-ip',
+    windowMs: readPositiveNumber('RATE_LIMIT_OTP_SEND_IP_WINDOW_MS', 60 * MINUTE_MS),
+    limit: readPositiveNumber('RATE_LIMIT_OTP_SEND_IP_MAX', 30),
+    message: 'Too many verification code requests from this network. Please try again later.',
+  },
 };
 
 const requestEmail = (req) =>
@@ -75,6 +87,7 @@ const createRateLimiter = ({
   skip,
   skipSuccessfulRequests,
   message,
+  handler,
 }) =>
   rateLimit({
     windowMs,
@@ -85,6 +98,7 @@ const createRateLimiter = ({
     keyGenerator,
     skip,
     skipSuccessfulRequests,
+    handler,
     store: getLimiterStore(keyPrefix),
   });
 
@@ -122,5 +136,51 @@ export const passwordResetEmailLimiter = RATE_LIMIT_ENABLED
       ...rateLimitConfig.passwordResetEmail,
       keyGenerator: (req) => requestEmail(req),
       skip: (req) => !requestEmail(req),
+    })
+  : noopLimiter;
+
+const respondWithOtpRateLimit = (req, res, next, options) =>
+  res.status(options.statusCode).json({
+    message: options.message?.message || options.message || 'Too many requests.',
+    code: 'OTP_RATE_LIMITED',
+  });
+
+export const otpSendEmailLimiter = RATE_LIMIT_ENABLED
+  ? createRateLimiter({
+      ...rateLimitConfig.otpSendEmail,
+      keyGenerator: (req) => requestEmail(req),
+      skip: (req) => !requestEmail(req),
+      handler: respondWithOtpRateLimit,
+    })
+  : noopLimiter;
+
+export const otpSendIpLimiter = RATE_LIMIT_ENABLED
+  ? createRateLimiter({
+      ...rateLimitConfig.otpSendIp,
+      handler: respondWithOtpRateLimit,
+    })
+  : noopLimiter;
+
+const GENERIC_PASSWORD_RESET_MESSAGE =
+  'If an account exists for that email, a password reset code has been sent.';
+
+const respondWithGenericPasswordResetMessage = (req, res) =>
+  res.status(200).json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
+
+export const forgotPasswordIpLimiter = RATE_LIMIT_ENABLED
+  ? createRateLimiter({
+      ...rateLimitConfig.passwordResetIp,
+      keyPrefix: 'forgot-password-ip',
+      handler: respondWithGenericPasswordResetMessage,
+    })
+  : noopLimiter;
+
+export const forgotPasswordEmailLimiter = RATE_LIMIT_ENABLED
+  ? createRateLimiter({
+      ...rateLimitConfig.passwordResetEmail,
+      keyPrefix: 'forgot-password-email',
+      keyGenerator: (req) => requestEmail(req),
+      skip: (req) => !requestEmail(req),
+      handler: respondWithGenericPasswordResetMessage,
     })
   : noopLimiter;

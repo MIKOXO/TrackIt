@@ -9,8 +9,13 @@ import connectDB from './config/db.js';
 import apiRouter from './routes/index.js';
 import errorHandler from './middleware/errorHandler.js';
 import { CSRF_HEADER_NAME } from './constants/authCookies.js';
+import { assertEmailServiceConfiguration } from './services/emailService.js';
+import { assertOtpConfiguration } from './services/otpService.js';
 
 dotenv.config();
+
+assertOtpConfiguration();
+assertEmailServiceConfiguration();
 
 const app = express();
 

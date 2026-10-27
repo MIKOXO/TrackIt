@@ -49,3 +49,30 @@ export const changePasswordSchema = z.object({
 export const deleteAccountSchema = z.object({
   password: passwordSchema,
 });
+
+const otpCodeSchema = z
+  .string({ message: 'Enter the 6-digit code.' })
+  .trim()
+  .regex(/^\d{6}$/, 'Enter the 6-digit code.');
+
+const otpPurposeSchema = z.enum(['verify_email', 'reset_password']);
+
+export const verifyEmailSchema = z.object({
+  email: emailSchema,
+  code: otpCodeSchema,
+});
+
+export const resendOtpSchema = z.object({
+  email: emailSchema,
+  purpose: otpPurposeSchema,
+});
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  email: emailSchema,
+  code: otpCodeSchema,
+  newPassword: passwordSchema,
+});

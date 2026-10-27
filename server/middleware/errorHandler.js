@@ -4,6 +4,19 @@ const errorHandler = (err, req, res, next) => {
     message: err.message || 'Internal Server Error',
   };
 
+  if (typeof err.code === 'string') {
+    payload.code = err.code;
+  }
+
+  if (err.retryAfter !== undefined) {
+    payload.retryAfter = err.retryAfter;
+    res.setHeader('Retry-After', String(err.retryAfter));
+  }
+
+  if (err.attemptsRemaining !== undefined) {
+    payload.attemptsRemaining = err.attemptsRemaining;
+  }
+
   if (process.env.NODE_ENV === 'development') {
     payload.stack = err.stack;
   }
