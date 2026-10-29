@@ -2,6 +2,7 @@ import apiClient, { clearCsrfToken } from './apiClient.js';
 
 export const register = (payload) => apiClient.post('/api/auth/register', payload);
 export const login = (payload) => apiClient.post('/api/auth/login', payload);
+export const googleLogin = (payload) => apiClient.post('/api/auth/google', payload);
 export const verifyEmail = (payload) => apiClient.post('/api/auth/verify-email', payload);
 export const resendOtp = (payload) => apiClient.post('/api/auth/resend-otp', payload);
 export const requestPasswordReset = (payload) =>
