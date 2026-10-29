@@ -8,9 +8,10 @@ import { setUser, setLoading, setError } from '../store/slices/authSlice';
 import Navbar from '../components/layout/Navbar.jsx';
 import Footer from '../components/layout/Footer.jsx';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { login } from '../services/authService.js';
+import { login, googleLogin } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
+import { GoogleLogin } from '@react-oauth/google';
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
 
 const SuspendedAccountModal = ({ open, heading, message, onClose }) => (
@@ -152,6 +153,36 @@ const SignIn = () => {
     }
   };
 
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const credential = credentialResponse?.credential;
+    if (!credential) {
+      showToast('Google sign-in failed.', { type: 'error' });
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      const response = await googleLogin({ credential });
+      dispatch(setUser({ user: response.data.user }));
+      showToast('Signed in successfully', { type: 'success' });
+      const destination =
+        response.data.user?.role === 'admin'
+          ? '/admin/dashboard'
+          : '/dashboard';
+      navigate(destination, { replace: true });
+    } catch (err) {
+      const message = getServerMessage(err, 'Unable to sign in with Google.');
+      dispatch(setError(message));
+      showToast(message, { type: 'error' });
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleGoogleError = () => {
+    showToast('Google sign-in failed.', { type: 'error' });
+  };
+
   const benefits = [
     { number: '1', text: 'Log in to your dashboard' },
     { number: '2', text: 'View your spending insights' },
@@ -281,6 +312,23 @@ const SignIn = () => {
                     )}
                   </span>
                 </motion.button>
+
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
+                  <>
+                    <div className='flex items-center gap-3 py-2'>
+                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
+                      <span className='text-xs font-medium uppercase text-slate-400'>or</span>
+                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
+                    </div>
+                    <div className='flex justify-center'>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap={false}
+                      />
+                    </div>
+                  </>
+                ) : null}
 
                 {/* Sign Up Link */}
                 <motion.p

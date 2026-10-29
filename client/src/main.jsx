@@ -5,6 +5,7 @@ import { ToastProvider } from './components/ui/ToastProvider.jsx'
 import './index.css'
 import App from './App.jsx'
 import { store } from './store/store.js'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 const applyInitialTheme = () => {
   const storedPreference = window.localStorage.getItem('theme')
@@ -19,11 +20,21 @@ const rootElement = document.getElementById('root')
   if (rootElement) {
     applyInitialTheme()
 
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+    const appTree = googleClientId ? (
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <App />
+      </GoogleOAuthProvider>
+    ) : (
+      <App />
+    )
+
     createRoot(rootElement).render(
       <StrictMode>
         <Provider store={store}>
           <ToastProvider>
-            <App />
+            {appTree}
           </ToastProvider>
         </Provider>
       </StrictMode>,

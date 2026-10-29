@@ -421,7 +421,13 @@ const Settings = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setIsDeleteModalOpen(true)}
+                  onClick={() => {
+                    if (!user?.hasPassword) {
+                      showToast('Set a password first using the forgot-password flow to delete your account.', { type: 'error' });
+                      return;
+                    }
+                    setIsDeleteModalOpen(true);
+                  }}
                   className="mt-4 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-700"
                 >
                   Delete account
@@ -447,6 +453,15 @@ const Settings = () => {
               </div>
 
               {!showPasswordForm ? (
+                !user?.hasPassword ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password', { state: { email: user?.email } })}
+                    className="rounded-xl border border-slate-200/60 bg-white px-6 py-3 font-medium text-slate-900 transition hover:bg-slate-50 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:hover:bg-slate-800/50"
+                  >
+                    Set a password
+                  </button>
+                ) : (
                 <button
                   type="button"
                   onClick={() => setShowPasswordForm(true)}
@@ -454,6 +469,7 @@ const Settings = () => {
                 >
                   Change Password
                 </button>
+                )
               ) : (
                 <form onSubmit={handlePasswordSubmit} className="space-y-5">
                   <div>

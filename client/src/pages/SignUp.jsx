@@ -3,13 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiEye, FiEyeOff, FiCheck, FiX } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
-import { setLoading, setError } from '../store/slices/authSlice';
+import { setUser, setLoading, setError } from '../store/slices/authSlice';
 import Navbar from '../components/layout/Navbar.jsx';
 import Footer from '../components/layout/Footer.jsx';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../services/authService.js';
+import { register, googleLogin } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
+import { GoogleLogin } from '@react-oauth/google';
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js';
 import { PASSWORD_REQUIREMENTS } from '../constants/passwordRequirements.js';
@@ -130,6 +131,37 @@ const SignUp = () => {
       setIsSubmitting(false);
       dispatch(setLoading(false));
     }
+  };
+
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const credential = credentialResponse?.credential;
+    if (!credential) {
+      showToast('Google sign-in failed.', { type: 'error' });
+      return;
+    }
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+    try {
+      const response = await googleLogin({ credential });
+      dispatch(setUser({ user: response.data.user }));
+      showToast('Signed in successfully', { type: 'success' });
+      const destination =
+        response.data.user?.role === 'admin'
+          ? '/admin/dashboard'
+          : '/dashboard';
+      navigate(destination, { replace: true });
+    } catch (err) {
+      const message = getServerMessage(err, 'Unable to sign up with Google.');
+      dispatch(setError(message));
+      showToast(message, { type: 'error' });
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleGoogleError = () => {
+    showToast('Google sign-in failed.', { type: 'error' });
   };
 
   const features = [
@@ -324,6 +356,23 @@ const SignUp = () => {
                     )}
                   </span>
                 </motion.button>
+
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
+                  <>
+                    <div className='flex items-center gap-3 py-2'>
+                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
+                      <span className='text-xs font-medium uppercase text-slate-400'>or</span>
+                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
+                    </div>
+                    <div className='flex justify-center'>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap={false}
+                      />
+                    </div>
+                  </>
+                ) : null}
 
                 {/* Sign In Link */}
                 <motion.p
