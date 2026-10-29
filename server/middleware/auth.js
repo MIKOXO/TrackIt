@@ -21,7 +21,7 @@ export const protect = async (req, res, next) => {
       return next({ status: 401, message: 'Authorization credentials are required.' });
     }
     const decoded = verifyToken(token);
-    const user = await User.findById(decoded.userId).select('+tokenVersion');
+    const user = await User.findById(decoded.userId).select('+tokenVersion +password');
     if (!user) {
       return next({ status: 401, message: 'User not found for given token.' });
     }
@@ -46,6 +46,7 @@ export const protect = async (req, res, next) => {
       currency: user.currency ?? 'ETB',
       role: user.role,
       emailVerified: Boolean(user.emailVerified),
+      hasPassword: Boolean(user.password),
     };
     next();
   } catch (error) {

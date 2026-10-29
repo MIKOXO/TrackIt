@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
@@ -113,6 +114,7 @@ const buildUserPayload = (user) => ({
   currency: user.currency ?? 'ETB',
   role: user.role,
   emailVerified: Boolean(user.emailVerified),
+  hasPassword: typeof user.hasPassword === 'function' ? user.hasPassword() : Boolean(user.password),
 });
 
 const GENERIC_PASSWORD_RESET_MESSAGE =
@@ -184,6 +186,11 @@ export const login = async (req, res, next) => {
       });
     }
 
+    if (!user.password) {
+      await bcrypt.compare(password, DUMMY_BCRYPT_HASH);
+      return next({ status: 401, message: 'Invalid email or password.' });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return next({ status: 401, message: 'Invalid email or password.' });
@@ -228,6 +235,7 @@ export const getCurrentUser = (req, res) => {
       currency: req.user.currency ?? 'ETB',
       role: req.user.role,
       emailVerified: Boolean(req.user.emailVerified),
+      hasPassword: Boolean(req.user.hasPassword),
     },
   });
 };
@@ -287,7 +295,7 @@ export const updateCurrentUser = async (req, res, next) => {
       }
     }
 
-    const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true });
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true }).select('+password');
     if (!user) {
       return next({ status: 404, message: 'User not found.' });
     }
@@ -333,6 +341,13 @@ export const changePassword = async (req, res, next) => {
       return next({ status: 404, message: 'User not found.' });
     }
 
+    if (!user.password) {
+      return next({
+        status: 400,
+        message: 'You do not have a password yet. Use the forgot-password flow to set one.',
+      });
+    }
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return next({ status: 401, message: 'Current password is incorrect.' });
@@ -363,7 +378,7 @@ export const verifyEmail = async (req, res, next) => {
 
     await consumeOtp({ email, purpose: 'verify_email', code });
 
-    const user = await User.findOne({ email }).select('+tokenVersion');
+    const user = await User.findOne({ email }).select('+tokenVersion +password');
     if (!user) {
       return next({
         status: 400,
@@ -493,11 +508,6 @@ export const deleteCurrentUser = async (req, res, next) => {
       return next({ status: 401, message: 'Not authenticated.' });
     }
 
-    const password = String(req.body.password ?? '');
-    if (!password) {
-      return next({ status: 400, message: 'Password is required.' });
-    }
-
     const user = await User.findById(req.user.id).select('+password');
     if (!user) {
       return next({ status: 404, message: 'User not found.' });
@@ -505,6 +515,18 @@ export const deleteCurrentUser = async (req, res, next) => {
 
     if (user.role === 'admin') {
       return next({ status: 403, message: 'Cannot delete an administrator account.' });
+    }
+
+    if (!user.password) {
+      return next({
+        status: 400,
+        message: 'You do not have a password yet. Use the forgot-password flow to set one before deleting your account.',
+      });
+    }
+
+    const password = String(req.body.password ?? '');
+    if (!password) {
+      return next({ status: 400, message: 'Password is required.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -520,6 +542,91 @@ export const deleteCurrentUser = async (req, res, next) => {
 
     res.json({ message: 'Account deleted successfully.' });
   } catch (error) {
+    next(error);
+  }
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const credential = String(req.body?.credential ?? '');
+    if (!credential) {
+      return next({ status: 400, message: 'Google credential is required.' });
+    }
+
+    const audience = process.env.GOOGLE_CLIENT_ID;
+    if (!audience) {
+      return next({ status: 500, message: 'Google sign-in is not configured.' });
+    }
+
+    const client = new OAuth2Client(audience);
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({ idToken: credential, audience });
+      payload = ticket.getPayload();
+    } catch (error) {
+      return next({ status: 401, message: 'Invalid Google credential.' });
+    }
+
+    if (!payload || payload.email_verified !== true) {
+      return next({ status: 401, message: 'Google email is not verified.' });
+    }
+
+    const email = normalizeEmail(payload.email);
+    const googleId = String(payload.sub);
+    const name = String(payload.name ?? '').trim() || email.split('@')[0];
+
+    let user = await User.findOne({ googleId }).select('+tokenVersion +password +googleId');
+
+    if (!user) {
+      user = await User.findOne({ email }).select('+tokenVersion +password +googleId');
+      if (user) {
+        if (user.status === 'suspended') {
+          return next({
+            status: 403,
+            message: `Your account has been suspended. Contact ${SUPPORT_EMAIL} for more info.`,
+          });
+        }
+        const wasUnverified = !user.emailVerified;
+        user.googleId = googleId;
+        user.emailVerified = true;
+        if (wasUnverified) {
+          user.password = null;
+          user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+        }
+        await user.save();
+      } else {
+        user = await User.create({
+          name,
+          email,
+          googleId,
+          emailVerified: true,
+          role: 'user',
+          currency: 'ETB',
+        });
+      }
+    } else {
+      if (user.status === 'suspended') {
+        return next({
+          status: 403,
+          message: `Your account has been suspended. Contact ${SUPPORT_EMAIL} for more info.`,
+        });
+      }
+      if (!user.emailVerified) {
+        user.emailVerified = true;
+        await user.save();
+      }
+    }
+
+    const token = signAuthToken(user);
+    const csrfToken = attachAuthCookies(res, token);
+    res.json({
+      user: buildUserPayload(user),
+      csrfToken,
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return next({ status: 409, message: 'Email is already in use.' });
+    }
     next(error);
   }
 };

@@ -11,6 +11,7 @@ import {
   resetPassword,
   deleteCurrentUser,
   logout,
+  googleLogin,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import csrfProtection from '../middleware/csrfProtection.js';
@@ -36,12 +37,14 @@ import {
   resendOtpSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  googleAuthSchema,
 } from '../validation/authSchemas.js';
 
 const router = express.Router();
 
 router.post('/register', registerLimiter, validate(registerSchema), register);
 router.post('/login', loginLimiter, validate(loginSchema), login);
+router.post('/google', loginLimiter, validate(googleAuthSchema), googleLogin);
 router.post('/verify-email', validate(verifyEmailSchema), verifyEmail);
 router.post(
   '/resend-otp',

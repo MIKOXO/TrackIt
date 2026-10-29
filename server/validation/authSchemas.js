@@ -76,3 +76,10 @@ export const resetPasswordSchema = z.object({
   code: otpCodeSchema,
   newPassword: passwordSchema,
 });
+
+export const googleAuthSchema = z.object({
+  credential: z
+    .string({ message: 'Google credential is required.' })
+    .trim()
+    .min(1, 'Google credential is required.'),
+});

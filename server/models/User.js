@@ -25,7 +25,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
+    select: false,
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
     select: false,
   },
   role: {
@@ -50,6 +56,10 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+userSchema.methods.hasPassword = function () {
+  return Boolean(this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 export default User;
