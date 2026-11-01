@@ -10,7 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { register, googleLogin } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
 import { getServerMessage } from '../utils/errorUtils.js';
-import { GoogleLogin } from '@react-oauth/google';
+import GoogleAuthButton from '../components/auth/GoogleAuthButton.jsx';
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js';
 import { PASSWORD_REQUIREMENTS } from '../constants/passwordRequirements.js';
@@ -359,18 +359,27 @@ const SignUp = () => {
 
                 {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
                   <>
-                    <div className='flex items-center gap-3 py-2'>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.4 }}
+                      className='flex items-center gap-3 py-2'>
                       <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                      <span className='text-xs font-medium uppercase text-slate-400'>or</span>
+                      <span className='text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500'>
+                        or
+                      </span>
                       <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                    </div>
-                    <div className='flex justify-center'>
-                      <GoogleLogin
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.45 }}>
+                      <GoogleAuthButton
                         onSuccess={handleGoogleSuccess}
                         onError={handleGoogleError}
-                        useOneTap={false}
+                        isLoading={loading}
                       />
-                    </div>
+                    </motion.div>
                   </>
                 ) : null}
 
