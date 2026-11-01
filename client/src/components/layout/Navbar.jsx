@@ -37,7 +37,7 @@ const Navbar = () => {
   }, [isDark])
 
   return (
-    <header className="sticky top-0 z-30 border-b border-transparent bg-transparent text-slate-900 transition-colors duration-500 dark:border-slate-800 dark:text-slate-50">
+    <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-white text-slate-900 transition-colors duration-300 dark:border-trackit-border/60 dark:bg-trackit-background dark:text-slate-50">
       <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className='flex justify-center items-center gap-2'>
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-trackit-accent to-emerald-500 text-white shadow-lg shadow-emerald-500/40">
