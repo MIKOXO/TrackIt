@@ -25,6 +25,14 @@ const getErrorHeading = (code) => {
   return 'We could not reset your password'
 }
 
+const OTP_EXPIRY_SECONDS = 10 * 60
+
+const formatCountdown = (seconds) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
+}
+
 const maskEmail = (email) => {
   const value = String(email ?? '')
   const atIndex = value.indexOf('@')
@@ -60,9 +68,11 @@ const ForgotPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [resetKey, setResetKey] = useState(0)
   const [countdown, setCountdown] = useState(0)
+  const [expiryCountdown, setExpiryCountdown] = useState(OTP_EXPIRY_SECONDS)
 
   const emailIsValid = /^\S+@\S+\.\S+$/.test(email.trim())
   const isCountingDown = countdown > 0
+  const isExpiryCountingDown = expiryCountdown > 0
   const requirementState = useMemo(
     () =>
       PASSWORD_REQUIREMENTS.map((requirement) => ({
@@ -91,6 +101,16 @@ const ForgotPassword = () => {
     return () => window.clearInterval(timer)
   }, [isCountingDown])
 
+  useEffect(() => {
+    if (!isExpiryCountingDown) {
+      return undefined
+    }
+    const timer = window.setInterval(() => {
+      setExpiryCountdown((current) => Math.max(0, current - 1))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [isExpiryCountingDown])
+
   const handleRequest = async (event) => {
     event.preventDefault()
     if (!emailIsValid) {
@@ -108,6 +128,7 @@ const ForgotPassword = () => {
       )
       setStep('otp')
       setCountdown(60)
+      setExpiryCountdown(OTP_EXPIRY_SECONDS)
       setCode('')
       setResetKey((current) => current + 1)
     } catch (error) {
@@ -128,6 +149,7 @@ const ForgotPassword = () => {
       ).unwrap()
       showToast(result?.message || 'A new reset code has been sent.', { type: 'success' })
       setCountdown(60)
+      setExpiryCountdown(OTP_EXPIRY_SECONDS)
       setCode('')
       setResetKey((current) => current + 1)
     } catch (error) {
@@ -291,6 +313,10 @@ const ForgotPassword = () => {
                     We sent a reset code to{' '}
                     <span className='font-semibold text-slate-900 dark:text-slate-50'>
                       {maskEmail(email)}
+                    </span>
+                    . The code expires in{' '}
+                    <span className='font-semibold text-slate-900 tabular-nums dark:text-slate-50'>
+                      {formatCountdown(expiryCountdown)}
                     </span>
                     .
                   </span>
