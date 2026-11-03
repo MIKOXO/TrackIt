@@ -25,6 +25,18 @@ const getErrorHeading = (code) => {
   return 'We could not reset your password'
 }
 
+const maskEmail = (email) => {
+  const value = String(email ?? '')
+  const atIndex = value.indexOf('@')
+  const local = atIndex === -1 ? value : value.slice(0, atIndex)
+  const domain = atIndex === -1 ? '' : value.slice(atIndex)
+  const keep = Math.ceil(local.length / 2)
+  const visible = local.slice(0, keep)
+  const covered = '*'.repeat(Math.max(0, local.length - keep))
+  const masked = `${visible}${covered}${domain}`
+  return masked || 'your email'
+}
+
 const ForgotPassword = () => {
   const dispatch = useDispatch()
   const location = useLocation()
@@ -62,9 +74,8 @@ const ForgotPassword = () => {
   const passwordIsValid = requirementState.every((requirement) => requirement.isValid)
   const passwordsMatch = password.length > 0 && password === confirmPassword
   const activeError =
-    step === 'request' ? resetRequestError : passwordResetError || resendError
-  const isResetReady =
-    emailIsValid && code.length === 6 && passwordIsValid && passwordsMatch
+    step === 'request' ? resetRequestError : step === 'otp' ? resendError : passwordResetError
+  const isResetReady = code.length === 6 && passwordIsValid && passwordsMatch
 
   useEffect(() => {
     dispatch(clearAuthFeedback())
@@ -95,7 +106,7 @@ const ForgotPassword = () => {
         result?.message || 'If an account exists, a reset code has been sent.',
         { type: 'success' },
       )
-      setStep('reset')
+      setStep('otp')
       setCountdown(60)
       setCode('')
       setResetKey((current) => current + 1)
@@ -199,18 +210,18 @@ const ForgotPassword = () => {
             className='relative z-10 overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 p-6 shadow-2xl shadow-black/10 backdrop-blur dark:border-trackit-border/60 dark:bg-slate-900/50 sm:p-10'>
             <div className='flex items-center gap-4'>
               <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500'>
-                {step === 'request' ? (
-                  <FiMail className='h-6 w-6' />
-                ) : (
-                  <FiLock className='h-6 w-6' />
-                )}
+                {step === 'request' ? <FiMail className='h-6 w-6' /> : <FiLock className='h-6 w-6' />}
               </div>
               <div>
                 <p className='text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500'>
                   Password recovery
                 </p>
                 <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
-                  {step === 'request' ? 'Forgot your password?' : 'Choose a new password'}
+                  {step === 'request'
+                    ? 'Forgot your password?'
+                    : step === 'otp'
+                      ? 'Reset your password'
+                      : 'Choose a new password'}
                 </h1>
               </div>
             </div>
@@ -273,13 +284,13 @@ const ForgotPassword = () => {
                   </button>
                 </form>
               </>
-            ) : (
+            ) : step === 'otp' ? (
               <>
                 <div className='mt-5 flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
                   <span>
                     We sent a reset code to{' '}
                     <span className='font-semibold text-slate-900 dark:text-slate-50'>
-                      {email}
+                      {maskEmail(email)}
                     </span>
                     .
                   </span>
@@ -308,6 +319,7 @@ const ForgotPassword = () => {
                       hasError={Boolean(passwordResetError)}
                       autoFocus
                       label='Password reset code'
+                      onComplete={() => setStep('password')}
                     />
                   </div>
 
@@ -327,128 +339,6 @@ const ForgotPassword = () => {
                     </div>
                   ) : null}
 
-                  <div>
-                    <label
-                      htmlFor='reset-password'
-                      className='mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300'>
-                      New password
-                    </label>
-                    <div className='relative'>
-                      <input
-                        id='reset-password'
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(event) => {
-                          setPassword(event.target.value)
-                          dispatch(clearAuthFeedback())
-                        }}
-                        placeholder='••••••••'
-                        autoComplete='new-password'
-                        className={`${inputClasses} pr-11`}
-                      />
-                      <button
-                        type='button'
-                        onClick={() => setShowPassword((current) => !current)}
-                        className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                        {showPassword ? (
-                          <FiEyeOff className='h-4 w-4' />
-                        ) : (
-                          <FiEye className='h-4 w-4' />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div aria-live='polite'>
-                    <p className='text-sm font-medium text-slate-700 dark:text-slate-300'>
-                      Password must include
-                    </p>
-                    <ul className='mt-2 grid gap-2 text-sm sm:grid-cols-2'>
-                      {requirementState.map((requirement) => (
-                        <li
-                          key={requirement.id}
-                          className='flex items-center gap-2 rounded-xl border border-slate-200/40 bg-white/60 px-3 py-2 text-slate-600 shadow-sm shadow-black/5 dark:border-trackit-border/60 dark:bg-slate-900/40 dark:text-slate-300'>
-                          {requirement.isValid ? (
-                            <FiCheck className='h-4 w-4 text-emerald-400' aria-hidden />
-                          ) : (
-                            <FiX className='h-4 w-4 text-rose-400' aria-hidden />
-                          )}
-                          <span
-                            className={
-                              requirement.isValid
-                                ? 'text-slate-900 dark:text-slate-50'
-                                : 'text-slate-600 dark:text-slate-400'
-                            }>
-                            {requirement.label}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor='reset-confirm-password'
-                      className='mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300'>
-                      Confirm new password
-                    </label>
-                    <div className='relative'>
-                      <input
-                        id='reset-confirm-password'
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={confirmPassword}
-                        onChange={(event) => {
-                          setConfirmPassword(event.target.value)
-                          dispatch(clearAuthFeedback())
-                        }}
-                        placeholder='••••••••'
-                        autoComplete='new-password'
-                        className={`${inputClasses} pr-11`}
-                      />
-                      <button
-                        type='button'
-                        onClick={() => setShowConfirmPassword((current) => !current)}
-                        className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                        aria-label={
-                          showConfirmPassword ? 'Hide password' : 'Show password'
-                        }>
-                        {showConfirmPassword ? (
-                          <FiEyeOff className='h-4 w-4' />
-                        ) : (
-                          <FiEye className='h-4 w-4' />
-                        )}
-                      </button>
-                    </div>
-                    {confirmPassword && !passwordsMatch ? (
-                      <p className='mt-2 text-xs font-medium text-rose-500'>
-                        Passwords must match.
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <button
-                    type='submit'
-                    disabled={!isResetReady || passwordResetLoading}
-                    aria-busy={passwordResetLoading}
-                    className={getPrimaryButtonClass(
-                      !isResetReady || passwordResetLoading,
-                    )}>
-                    <span className='inline-flex items-center gap-2'>
-                      {passwordResetLoading ? (
-                        <>
-                          <LoadingIndicator />
-                          Resetting password...
-                        </>
-                      ) : (
-                        <>
-                          Reset password
-                          <FiArrowRight className='h-4 w-4' />
-                        </>
-                      )}
-                    </span>
-                  </button>
-
                   <div className='flex flex-col items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-400 sm:flex-row'>
                     <span>Didn&apos;t get the code?</span>
                     <button
@@ -464,6 +354,120 @@ const ForgotPassword = () => {
                     </button>
                   </div>
                 </form>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label
+                    htmlFor='reset-password'
+                    className='mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300'>
+                    New password
+                  </label>
+                  <div className='relative'>
+                    <input
+                      id='reset-password'
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(event) => {
+                        setPassword(event.target.value)
+                        dispatch(clearAuthFeedback())
+                      }}
+                      placeholder='••••••••'
+                      autoComplete='new-password'
+                      className={`${inputClasses} pr-11`}
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setShowPassword((current) => !current)}
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                      {showPassword ? <FiEyeOff className='h-4 w-4' /> : <FiEye className='h-4 w-4' />}
+                    </button>
+                  </div>
+                </div>
+
+                <div aria-live='polite'>
+                  <p className='text-sm font-medium text-slate-700 dark:text-slate-300'>
+                    Password must include
+                  </p>
+                  <ul className='mt-2 grid gap-2 text-sm sm:grid-cols-2'>
+                    {requirementState.map((requirement) => (
+                      <li
+                        key={requirement.id}
+                        className='flex items-center gap-2 rounded-xl border border-slate-200/40 bg-white/60 px-3 py-2 text-slate-600 shadow-sm shadow-black/5 dark:border-trackit-border/60 dark:bg-slate-900/40 dark:text-slate-300'>
+                        {requirement.isValid ? (
+                          <FiCheck className='h-4 w-4 text-emerald-400' aria-hidden />
+                        ) : (
+                          <FiX className='h-4 w-4 text-rose-400' aria-hidden />
+                        )}
+                        <span
+                          className={
+                            requirement.isValid
+                              ? 'text-slate-900 dark:text-slate-50'
+                              : 'text-slate-600 dark:text-slate-400'
+                          }
+                        >
+                          {requirement.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor='reset-confirm-password'
+                    className='mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300'>
+                    Confirm new password
+                  </label>
+                  <div className='relative'>
+                    <input
+                      id='reset-confirm-password'
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(event) => {
+                        setConfirmPassword(event.target.value)
+                        dispatch(clearAuthFeedback())
+                      }}
+                      placeholder='••••••••'
+                      autoComplete='new-password'
+                      className={`${inputClasses} pr-11`}
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setShowConfirmPassword((current) => !current)}
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                      {showConfirmPassword ? <FiEyeOff className='h-4 w-4' /> : <FiEye className='h-4 w-4' />}
+                    </button>
+                  </div>
+                  {confirmPassword && !passwordsMatch ? (
+                    <p className='mt-2 text-xs font-medium text-rose-500'>
+                      Passwords must match.
+                    </p>
+                  ) : null}
+                </div>
+
+                <button
+                  type='button'
+                  onClick={handleReset}
+                  disabled={!isResetReady || passwordResetLoading}
+                  aria-busy={passwordResetLoading}
+                  className={getPrimaryButtonClass(!isResetReady || passwordResetLoading)}>
+                  <span className='inline-flex items-center gap-2'>
+                    {passwordResetLoading ? (
+                      <>
+                        <LoadingIndicator />
+                        Resetting password...
+                      </>
+                    ) : (
+                      <>
+                        Reset password
+                        <FiArrowRight className='h-4 w-4' />
+                      </>
+                    )}
+                  </span>
+                </button>
               </>
             )}
 

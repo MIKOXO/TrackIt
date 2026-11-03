@@ -23,6 +23,18 @@ const formatCountdown = (seconds) => {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
+const maskEmail = (email) => {
+  const value = String(email ?? '')
+  const atIndex = value.indexOf('@')
+  const local = atIndex === -1 ? value : value.slice(0, atIndex)
+  const domain = atIndex === -1 ? '' : value.slice(atIndex)
+  const keep = Math.ceil(local.length / 2)
+  const visible = local.slice(0, keep)
+  const covered = '*'.repeat(Math.max(0, local.length - keep))
+  const masked = `${visible}${covered}${domain}`
+  return masked || 'your email'
+}
+
 const getErrorHeading = (code) => {
   if (code === 'OTP_EXPIRED') return 'That code has expired'
   if (code === 'OTP_MAX_ATTEMPTS') return 'Too many attempts'
@@ -42,7 +54,7 @@ const VerifyEmail = () => {
     resendError,
   } = useSelector((state) => state.auth)
 
-  const [email, setEmail] = useState(location.state?.email ?? '')
+  const [email] = useState(location.state?.email ?? '')
   const [code, setCode] = useState('')
   const [resetKey, setResetKey] = useState(0)
   const [countdown, setCountdown] = useState(location.state?.codeSent ? 60 : 0)
@@ -77,11 +89,6 @@ const VerifyEmail = () => {
     }, 1000)
     return () => window.clearInterval(timer)
   }, [isExpiryCountingDown])
-
-  const handleEmailChange = (event) => {
-    setEmail(event.target.value)
-    dispatch(clearAuthFeedback())
-  }
 
   const handleCodeChange = (nextCode) => {
     setCode(nextCode)
@@ -157,12 +164,12 @@ const VerifyEmail = () => {
           <div className='h-64 w-[40rem] bg-emerald-500/40' />
         </div>
 
-        <div className='mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8'>
+        <div className='mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8'>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className='relative z-10 overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 p-6 shadow-2xl shadow-black/10 backdrop-blur dark:border-trackit-border/60 dark:bg-slate-900/50 sm:p-10'>
+            className='relative z-10 overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 p-4 shadow-2xl shadow-black/10 backdrop-blur dark:border-trackit-border/60 dark:bg-slate-900/50 sm:p-6'>
             <div className='flex items-center gap-4'>
               <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500'>
                 <FiMail className='h-6 w-6' />
@@ -171,18 +178,14 @@ const VerifyEmail = () => {
                 <p className='text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500'>
                   Verify your email
                 </p>
-                <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
+                <h1 className='mt-1 text-xl font-semibold tracking-tight sm:text-2xl'>
                   Check your inbox
                 </h1>
               </div>
             </div>
 
-            <p className='mt-5 text-sm text-slate-600 dark:text-slate-400'>
-              Enter the 6-digit code we sent to{' '}
-              <span className='font-semibold text-slate-900 dark:text-slate-50'>
-                {email || 'your email address'}
-              </span>
-              . The code expires in{' '}
+            <p className='mt-4 text-sm text-slate-600 dark:text-slate-400'>
+              Enter the 6-digit code we sent to {maskEmail(email)}. The code expires in{' '}
               <span className='font-semibold text-slate-900 tabular-nums dark:text-slate-50'>
                 {formatCountdown(expiryCountdown)}
               </span>
@@ -194,24 +197,7 @@ const VerifyEmail = () => {
                 event.preventDefault()
                 handleVerify()
               }}
-              className='mt-8 space-y-6'>
-              <div>
-                <label
-                  htmlFor='verify-email'
-                  className='mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300'>
-                  Email address
-                </label>
-                <input
-                  id='verify-email'
-                  type='email'
-                  value={email}
-                  onChange={handleEmailChange}
-                  placeholder='you@example.com'
-                  autoComplete='email'
-                  className='w-full rounded-xl border border-slate-200/60 bg-white/80 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm shadow-black/5 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:placeholder-slate-500 dark:focus:border-emerald-400'
-                />
-              </div>
-
+              className='mt-4 space-y-5'>
               <div>
                 <p className='mb-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300'>
                   Verification code
@@ -279,7 +265,7 @@ const VerifyEmail = () => {
               </div>
             </form>
 
-            <div className='mt-8 flex flex-col items-center justify-between gap-3 border-t border-slate-200/60 pt-6 text-sm dark:border-trackit-border/60 sm:flex-row'>
+            <div className='mt-6 flex flex-col items-center justify-between gap-3 border-t border-slate-200/60 pt-5 text-sm dark:border-trackit-border/60 sm:flex-row'>
               <Link
                 to='/signin'
                 className='font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'>
