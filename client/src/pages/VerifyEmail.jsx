@@ -15,6 +15,14 @@ import {
   verifyEmailCode,
 } from '../store/slices/authSlice'
 
+const OTP_EXPIRY_SECONDS = 10 * 60
+
+const formatCountdown = (seconds) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
+}
+
 const getErrorHeading = (code) => {
   if (code === 'OTP_EXPIRED') return 'That code has expired'
   if (code === 'OTP_MAX_ATTEMPTS') return 'Too many attempts'
@@ -38,9 +46,11 @@ const VerifyEmail = () => {
   const [code, setCode] = useState('')
   const [resetKey, setResetKey] = useState(0)
   const [countdown, setCountdown] = useState(location.state?.codeSent ? 60 : 0)
+  const [expiryCountdown, setExpiryCountdown] = useState(OTP_EXPIRY_SECONDS)
 
   const emailIsValid = /^\S+@\S+\.\S+$/.test(email.trim())
   const isCountingDown = countdown > 0
+  const isExpiryCountingDown = expiryCountdown > 0
   const activeError = verificationError || resendError
   const canSubmit = emailIsValid && code.length === 6 && !verificationLoading
 
@@ -57,6 +67,16 @@ const VerifyEmail = () => {
     }, 1000)
     return () => window.clearInterval(timer)
   }, [isCountingDown])
+
+  useEffect(() => {
+    if (!isExpiryCountingDown) {
+      return undefined
+    }
+    const timer = window.setInterval(() => {
+      setExpiryCountdown((current) => Math.max(0, current - 1))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [isExpiryCountingDown])
 
   const handleEmailChange = (event) => {
     setEmail(event.target.value)
@@ -116,6 +136,7 @@ const VerifyEmail = () => {
         type: 'success',
       })
       setCountdown(60)
+      setExpiryCountdown(OTP_EXPIRY_SECONDS)
       setCode('')
       setResetKey((current) => current + 1)
     } catch (error) {
@@ -161,7 +182,11 @@ const VerifyEmail = () => {
               <span className='font-semibold text-slate-900 dark:text-slate-50'>
                 {email || 'your email address'}
               </span>
-              . The code expires in 10 minutes.
+              . The code expires in{' '}
+              <span className='font-semibold text-slate-900 tabular-nums dark:text-slate-50'>
+                {formatCountdown(expiryCountdown)}
+              </span>
+              .
             </p>
 
             <form
