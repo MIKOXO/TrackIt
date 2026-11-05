@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiMail } from 'react-icons/fi'
@@ -8,12 +8,12 @@ import Footer from '../components/layout/Footer.jsx'
 import OtpInput from '../components/auth/OtpInput.jsx'
 import LoadingIndicator from '../components/ui/LoadingIndicator.jsx'
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js'
-import { useToast } from '../components/ui/ToastProvider.jsx'
-import {
-  clearAuthFeedback,
-  resendOtpCode,
-  verifyEmailCode,
-} from '../store/slices/authSlice'
+import FieldError from '../components/auth/FieldError.jsx'
+import FormAlert from '../components/auth/FormAlert.jsx'
+import { useTimedMessage } from '../hooks/useTimedMessage.js'
+import { mapAuthError } from '../utils/authErrorMapper.js'
+import { AUTH_FEEDBACK_TIMEOUTS } from '../constants/authFeedback.js'
+import { clearAuthFeedback, resendOtpCode, verifyEmailCode } from '../store/slices/authSlice'
 
 const OTP_EXPIRY_SECONDS = 10 * 60
 
@@ -42,33 +42,99 @@ const getErrorHeading = (code) => {
   return 'We could not verify that code'
 }
 
+const OTP_FIELD_ERROR_CODES = ['OTP_INVALID', 'OTP_EXPIRED']
+
 const VerifyEmail = () => {
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
-  const { showToast } = useToast()
   const {
     verificationLoading,
     verificationError,
     resendLoading,
     resendError,
   } = useSelector((state) => state.auth)
+  const {
+    message: blockMessage,
+    variant: blockVariant,
+    visible: blockVisible,
+    show,
+    clear,
+    pause,
+    resume,
+  } = useTimedMessage(AUTH_FEEDBACK_TIMEOUTS.blockError)
 
   const [email] = useState(location.state?.email ?? '')
   const [code, setCode] = useState('')
   const [resetKey, setResetKey] = useState(0)
   const [countdown, setCountdown] = useState(location.state?.codeSent ? 60 : 0)
   const [expiryCountdown, setExpiryCountdown] = useState(OTP_EXPIRY_SECONDS)
+  const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
+  const [otpFieldError, setOtpFieldError] = useState(null)
+  const otpInputRef = useRef(null)
+  const fieldErrorTimerRef = useRef(null)
+  const redirectTimerRef = useRef(null)
+  const otpFieldErrorServerRef = useRef(false)
+  const rateLimitActiveRef = useRef(false)
 
   const emailIsValid = /^\S+@\S+\.\S+$/.test(email.trim())
   const isCountingDown = countdown > 0
   const isExpiryCountingDown = expiryCountdown > 0
   const activeError = verificationError || resendError
-  const canSubmit = emailIsValid && code.length === 6 && !verificationLoading
+  const mappedError = useMemo(() => mapAuthError(activeError, 'Unable to verify that code.'), [activeError])
+  const isRateLimited = rateLimitSeconds > 0
+  const canSubmit = emailIsValid && !verificationLoading && !isRateLimited
+
+  useEffect(() => () => {
+    window.clearTimeout(fieldErrorTimerRef.current)
+    window.clearTimeout(redirectTimerRef.current)
+  }, [])
+
+  useEffect(() => {
+    if (!isRateLimited) return undefined
+    const timer = window.setInterval(() => setRateLimitSeconds((current) => Math.max(0, current - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [isRateLimited])
+
+  useEffect(() => {
+    if (isRateLimited) {
+      rateLimitActiveRef.current = true
+    } else if (rateLimitActiveRef.current) {
+      rateLimitActiveRef.current = false
+      clear()
+    }
+  }, [isRateLimited, clear])
 
   useEffect(() => {
     dispatch(clearAuthFeedback())
   }, [dispatch])
+
+  useEffect(() => {
+    if (location.state?.codeSent) {
+      show('A verification code has been sent to your email.', 'info')
+    }
+  }, [location.state?.codeSent, show])
+
+  useEffect(() => {
+    if (!activeError) {
+      clear()
+      return undefined
+    }
+    if (OTP_FIELD_ERROR_CODES.includes(mappedError.code)) {
+      clear()
+      otpFieldErrorServerRef.current = true
+      // Synchronize the local inline message with the rejected Redux request.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOtpFieldError(mappedError.message)
+      window.clearTimeout(fieldErrorTimerRef.current)
+      fieldErrorTimerRef.current = window.setTimeout(() => setOtpFieldError(null), AUTH_FEEDBACK_TIMEOUTS.serverField)
+      return undefined
+    }
+    setOtpFieldError(null)
+    show(mappedError.message, 'error', mappedError.retryAfter ? 0 : undefined)
+    if (mappedError.retryAfter) setRateLimitSeconds(Number(mappedError.retryAfter))
+    return undefined
+  }, [activeError, mappedError, show, clear])
 
   useEffect(() => {
     if (!isCountingDown) {
@@ -92,46 +158,54 @@ const VerifyEmail = () => {
 
   const handleCodeChange = (nextCode) => {
     setCode(nextCode)
+    if (otpFieldErrorServerRef.current || nextCode.length === 6) {
+      otpFieldErrorServerRef.current = false
+      setOtpFieldError(null)
+      window.clearTimeout(fieldErrorTimerRef.current)
+    }
     dispatch(clearAuthFeedback())
   }
 
   const handleVerify = async (submittedCode = code) => {
+    if (verificationLoading || isRateLimited) return
     if (!emailIsValid) {
-      showToast('Enter the email address you signed up with.', { type: 'error' })
+      show('Enter the email address you signed up with.', 'error')
       return
     }
-    if (submittedCode.length !== 6 || verificationLoading) {
+    clear()
+    setRateLimitSeconds(0)
+    if (submittedCode.length !== 6) {
+      otpFieldErrorServerRef.current = false
+      setOtpFieldError('Enter the 6-digit code from your email.')
+      otpInputRef.current?.focus()
       return
     }
-
     dispatch(clearAuthFeedback())
 
     try {
       const result = await dispatch(
         verifyEmailCode({ email: email.trim(), code: submittedCode }),
       ).unwrap()
-      showToast(result?.message || 'Email verified successfully.', { type: 'success' })
+      show(result?.message || 'Email verified successfully.', 'success')
       const destination =
         result?.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'
-      navigate(destination, { replace: true })
+      redirectTimerRef.current = window.setTimeout(() => navigate(destination, { replace: true }), 1400)
     } catch (error) {
-      showToast(error?.message || 'Unable to verify that code.', { type: 'error' })
-      setCode('')
-      setResetKey((current) => current + 1)
-      if (error?.retryAfter) {
-        setCountdown(error.retryAfter)
+      const mapped = mapAuthError(error, 'Unable to verify that code.')
+      if (mapped.retryAfter) {
+        setRateLimitSeconds(Number(mapped.retryAfter))
       }
     }
   }
 
   const handleResend = async () => {
+    if (isRateLimited || countdown > 0 || resendLoading) return
     if (!emailIsValid) {
-      showToast('Enter the email address you signed up with.', { type: 'error' })
+      show('Enter the email address you signed up with.', 'error')
       return
     }
-    if (countdown > 0 || resendLoading) {
-      return
-    }
+    clear()
+    setRateLimitSeconds(0)
 
     dispatch(clearAuthFeedback())
 
@@ -139,24 +213,30 @@ const VerifyEmail = () => {
       const result = await dispatch(
         resendOtpCode({ email: email.trim(), purpose: 'verify_email' }),
       ).unwrap()
-      showToast(result?.message || 'A new verification code has been sent.', {
-        type: 'success',
-      })
+      show(result?.message || 'A new verification code has been sent.', 'info')
       setCountdown(60)
       setExpiryCountdown(OTP_EXPIRY_SECONDS)
       setCode('')
+      setOtpFieldError(null)
+      window.clearTimeout(fieldErrorTimerRef.current)
       setResetKey((current) => current + 1)
     } catch (error) {
-      showToast(error?.message || 'Unable to send a new code.', { type: 'error' })
-      if (error?.retryAfter) {
-        setCountdown(error.retryAfter)
+      const mapped = mapAuthError(error, 'Unable to send a new code.')
+      if (mapped.retryAfter) {
+        setCountdown(mapped.retryAfter)
+        setRateLimitSeconds(Number(mapped.retryAfter))
       }
     }
   }
 
+  const handleBlockDismiss = () => {
+    clear()
+    dispatch(clearAuthFeedback())
+  }
+
   return (
     <div className='min-h-screen bg-white text-slate-900 transition-colors duration-300 dark:bg-trackit-background dark:text-slate-50'>
-      <div className='pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(15,23,42,0.95),_rgba(2,6,23,1)_70%)]' />
+      <div className='pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.18),_transparent_60%),_radial-gradient(circle_at_bottom,_rgba(15,23,42,0.95),_rgba(2,6,23,1)_70%)]' />
       <Navbar />
 
       <main className='relative overflow-hidden'>
@@ -192,11 +272,23 @@ const VerifyEmail = () => {
               .
             </p>
 
+            {blockVisible ? (
+              <FormAlert
+                variant={blockVariant}
+                message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
+                title={mappedError?.code ? getErrorHeading(mappedError.code) : undefined}
+                onDismiss={handleBlockDismiss}
+                onPause={pause}
+                onResume={resume}
+              />
+            ) : null}
+
             <form
               onSubmit={(event) => {
                 event.preventDefault()
                 handleVerify()
               }}
+              noValidate
               className='mt-4 space-y-5'>
               <div>
                 <p className='mb-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300'>
@@ -209,29 +301,16 @@ const VerifyEmail = () => {
                   onComplete={handleVerify}
                   disabled={verificationLoading}
                   hasError={Boolean(verificationError)}
+                  errorId='verify-otp-error'
+                  firstInputRef={otpInputRef}
                   autoFocus
                 />
+                <FieldError id='verify-otp-error' message={otpFieldError} visible={Boolean(otpFieldError)} />
               </div>
-
-              {activeError ? (
-                <div
-                  role='alert'
-                  className='rounded-2xl border border-rose-200/70 bg-rose-50/80 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200'>
-                  <p className='font-semibold'>{getErrorHeading(activeError.code)}</p>
-                  <p className='mt-1'>{activeError.message}</p>
-                  {activeError.attemptsRemaining !== null &&
-                  activeError.attemptsRemaining !== undefined ? (
-                    <p className='mt-1 text-xs font-medium'>
-                      {activeError.attemptsRemaining} attempt
-                      {activeError.attemptsRemaining === 1 ? '' : 's'} remaining.
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
 
               <button
                 type='submit'
-                disabled={!canSubmit}
+                  disabled={!canSubmit}
                 aria-busy={verificationLoading}
                 className={getPrimaryButtonClass(!canSubmit)}>
                 <span className='inline-flex items-center gap-2'>
@@ -254,7 +333,7 @@ const VerifyEmail = () => {
                 <button
                   type='button'
                   onClick={handleResend}
-                  disabled={countdown > 0 || resendLoading || !emailIsValid}
+                  disabled={countdown > 0 || resendLoading || !emailIsValid || isRateLimited}
                   className='font-semibold text-emerald-500 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:text-slate-400 dark:hover:text-emerald-400 dark:disabled:text-slate-500'>
                   {resendLoading
                     ? 'Sending...'
