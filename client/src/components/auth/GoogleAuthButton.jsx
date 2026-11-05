@@ -10,6 +10,7 @@ const GoogleAuthButton = ({
   onError,
   label = 'Continue with Google',
   isLoading = false,
+  disabled = false,
   className = '',
 }) => {
   const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
@@ -86,16 +87,16 @@ const GoogleAuthButton = ({
   const isBusy = isLoading || !scriptLoadedSuccessfully;
 
   const stateClasses =
-    isHovered && !isBusy
+    isHovered && !isBusy && !disabled
       ? 'border-emerald-400/60 bg-emerald-50/70 text-emerald-950 shadow-[0_2px_4px_rgba(15,23,42,0.05),0_6px_14px_-4px_rgba(15,23,42,0.12)] dark:border-emerald-400/40 dark:bg-slate-900/90 dark:text-emerald-50 dark:shadow-[0_4px_16px_-4px_rgba(16,185,129,0.18)]'
       : 'border-slate-200/60 bg-white/80 text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_3px_8px_-2px_rgba(15,23,42,0.08)] dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:shadow-none';
 
   const surfaceClasses = [
     'pointer-events-none relative z-10 flex h-full w-full items-center justify-center gap-3 rounded-xl border px-5 text-sm font-semibold transition-all duration-200 ease-out',
     stateClasses,
-    isPressed && !isBusy ? 'scale-[0.98]' : 'scale-100',
+    isPressed && !isBusy && !disabled ? 'scale-[0.98]' : 'scale-100',
     isFocused ? 'ring-4 ring-emerald-500/20' : 'outline-none',
-    isBusy ? 'cursor-not-allowed opacity-60' : 'opacity-100',
+    isBusy || disabled ? 'cursor-not-allowed opacity-60' : 'opacity-100',
     className,
   ]
     .filter(Boolean)
@@ -109,7 +110,7 @@ const GoogleAuthButton = ({
     <div
       ref={wrapperRef}
       role='presentation'
-      className={`relative h-[44px] w-full cursor-pointer select-none ${className}`}
+      className={`relative h-[44px] w-full select-none ${disabled || isBusy ? 'cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -117,6 +118,7 @@ const GoogleAuthButton = ({
       }}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
+      aria-disabled={disabled || isBusy}
       aria-busy={isBusy}>
       {/* Single invisible official GSI button, stretched to cover the full surface */}
       <div
@@ -125,7 +127,7 @@ const GoogleAuthButton = ({
         style={{
           '--gsi-scale-x': scaleX.toFixed(4),
           '--gsi-scale-y': scaleY.toFixed(4),
-          pointerEvents: isBusy ? 'none' : 'auto',
+          pointerEvents: isBusy || disabled ? 'none' : 'auto',
         }}
         onFocusCapture={() => setIsFocused(true)}
         onBlurCapture={() => setIsFocused(false)}

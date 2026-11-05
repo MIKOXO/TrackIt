@@ -8,6 +8,8 @@ const OtpInput = ({
   disabled = false,
   autoFocus = false,
   hasError = false,
+  errorId,
+  firstInputRef,
   label = 'Verification code',
 }) => {
   const inputsRef = useRef([])
@@ -129,6 +131,7 @@ const OtpInput = ({
           key={index}
           ref={(element) => {
             inputsRef.current[index] = element
+            if (index === 0 && firstInputRef) firstInputRef.current = element
           }}
           type='text'
           inputMode='numeric'
@@ -143,6 +146,7 @@ const OtpInput = ({
           autoComplete={index === 0 ? 'one-time-code' : 'off'}
           aria-label={`${label} digit ${index + 1}`}
           aria-invalid={hasError}
+          aria-describedby={hasError && errorId ? errorId : undefined}
           className={`h-12 w-11 rounded-xl border bg-white/80 text-center text-xl font-semibold text-slate-900 shadow-sm shadow-black/5 transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-900/60 dark:text-slate-50 sm:h-14 sm:w-12 ${inputClasses}`}
         />
       ))}
