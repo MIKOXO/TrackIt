@@ -24,10 +24,11 @@ export const assertOtpConfiguration = () => {
   getOtpSecret();
 };
 
-const createOtpError = ({ status, code, message, retryAfter, attemptsRemaining }) => {
+const createOtpError = ({ status, code, message, retryAfter, attemptsRemaining, field }) => {
   const error = new Error(message);
   error.status = status;
   error.code = code;
+  if (field) error.field = field;
   if (retryAfter !== undefined) {
     error.retryAfter = retryAfter;
   }
@@ -85,6 +86,7 @@ export const issueOtp = async ({ email, purpose }) => {
           status: 429,
           code: 'OTP_RATE_LIMITED',
           message: 'Too many verification codes requested. Please try again later.',
+          retryAfter: Math.max(1, Math.ceil((HOUR_MS - windowAge) / 1000)),
         });
       }
       sendCount = existing.sendCount + 1;
@@ -138,6 +140,7 @@ export const consumeOtp = async ({ email, purpose, code }) => {
       status: 400,
       code: 'OTP_INVALID',
       message: 'That verification code is invalid. Request a new code and try again.',
+      field: 'code',
     });
   }
 
@@ -147,6 +150,7 @@ export const consumeOtp = async ({ email, purpose, code }) => {
       status: 400,
       code: 'OTP_EXPIRED',
       message: 'That verification code has expired. Request a new code and try again.',
+      field: 'code',
     });
   }
 
@@ -179,6 +183,7 @@ export const consumeOtp = async ({ email, purpose, code }) => {
       message: `That verification code is incorrect. ${attemptsRemaining} attempt${
         attemptsRemaining === 1 ? '' : 's'
       } remaining.`,
+        field: 'code',
       attemptsRemaining,
     });
   }

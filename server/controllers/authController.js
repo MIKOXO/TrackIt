@@ -129,13 +129,13 @@ export const register = async (req, res, next) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return next({ status: 409, message: 'User already exists.' });
+      return next({ status: 409, message: 'User already exists.', field: 'email' });
     }
 
     const { isValid, unmet } = getPasswordValidation(password);
     if (!isValid) {
       const message = `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`;
-      return next({ status: 400, message });
+      return next({ status: 400, message, field: 'password' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -163,7 +163,7 @@ export const register = async (req, res, next) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
-      return next({ status: 409, message: 'Email is already in use.' });
+      return next({ status: 409, message: 'Email is already in use.', field: 'email' });
     }
     next(error);
   }
@@ -208,6 +208,7 @@ export const login = async (req, res, next) => {
         status: 403,
         code: 'EMAIL_NOT_VERIFIED',
         message: EMAIL_NOT_VERIFIED_MESSAGE,
+        field: 'email',
       });
     }
 
@@ -291,7 +292,7 @@ export const updateCurrentUser = async (req, res, next) => {
         _id: { $ne: req.user.id },
       });
       if (existingUser) {
-        return next({ status: 409, message: 'Email is already in use.' });
+        return next({ status: 409, message: 'Email is already in use.', field: 'email' });
       }
     }
 
@@ -329,7 +330,7 @@ export const changePassword = async (req, res, next) => {
     const { isValid, unmet } = getPasswordValidation(newPassword);
     if (!isValid) {
       const message = `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`;
-      return next({ status: 400, message });
+      return next({ status: 400, message, field: 'password' });
     }
 
     if (confirmPassword !== undefined && newPassword !== confirmPassword) {
@@ -384,6 +385,7 @@ export const verifyEmail = async (req, res, next) => {
         status: 400,
         code: 'OTP_INVALID',
         message: 'That verification code is invalid. Request a new code and try again.',
+        field: 'code',
       });
     }
 
@@ -472,7 +474,7 @@ export const resetPassword = async (req, res, next) => {
     const { isValid, unmet } = getPasswordValidation(newPassword);
     if (!isValid) {
       const message = `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`;
-      return next({ status: 400, message });
+      return next({ status: 400, message, field: 'password' });
     }
 
     await consumeOtp({ email, purpose: 'reset_password', code });
@@ -483,6 +485,7 @@ export const resetPassword = async (req, res, next) => {
         status: 400,
         code: 'OTP_INVALID',
         message: 'That reset code is invalid. Request a new code and try again.',
+        field: 'code',
       });
     }
 
@@ -625,7 +628,7 @@ export const googleLogin = async (req, res, next) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
-      return next({ status: 409, message: 'Email is already in use.' });
+      return next({ status: 409, message: 'Email is already in use.', field: 'email' });
     }
     next(error);
   }

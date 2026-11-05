@@ -17,6 +17,10 @@ const errorHandler = (err, req, res, next) => {
     payload.attemptsRemaining = err.attemptsRemaining;
   }
 
+  if (err.field) {
+    payload.field = err.field;
+  }
+
   if (process.env.NODE_ENV === 'development') {
     payload.stack = err.stack;
   }
