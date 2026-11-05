@@ -11,7 +11,9 @@ const toAuthError = (error, fallback) => {
   return {
     message: data.message || error?.message || fallback,
     code: data.code ?? null,
-    retryAfter: data.retryAfter ?? null,
+    field: data.field ?? null,
+    status: error?.response?.status ?? data.status ?? null,
+    retryAfter: data.retryAfter ?? error?.response?.headers?.['retry-after'] ?? null,
     attemptsRemaining: data.attemptsRemaining ?? null,
   }
 }
