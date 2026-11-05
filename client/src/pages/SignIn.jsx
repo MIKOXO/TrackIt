@@ -3,10 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js';
-import { HiOutlineSparkles } from 'react-icons/hi';
 import { setUser, setLoading, setError } from '../store/slices/authSlice';
-import Navbar from '../components/layout/Navbar.jsx';
-import Footer from '../components/layout/Footer.jsx';
+import AuthLayout from '../components/auth/AuthLayout.jsx';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login, googleLogin } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
@@ -70,7 +68,7 @@ const SignIn = () => {
   });
 
   const inputBaseClasses =
-    'w-full rounded-xl border bg-white/80 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm shadow-black/5 transition focus:outline-none dark:bg-slate-900/60 dark:text-slate-50 dark:placeholder-slate-500';
+    'w-full rounded-xl border bg-white/80 px-4 py-2.5 text-slate-900 placeholder-slate-400 shadow-sm shadow-black/5 transition focus:outline-none dark:bg-slate-900/60 dark:text-slate-50 dark:placeholder-slate-500';
 
   const getInputClass = (hasError, extra = '') => {
     const stateClass = hasError
@@ -183,46 +181,23 @@ const SignIn = () => {
     showToast('Google sign-in failed.', { type: 'error' });
   };
 
-  const benefits = [
-    { number: '1', text: 'Log in to your dashboard' },
-    { number: '2', text: 'View your spending insights' },
-    { number: '3', text: 'Chat with AI for advice' },
-  ];
-
   return (
-    <div className='min-h-screen bg-white text-slate-900 transition-colors duration-300 dark:bg-trackit-background dark:text-slate-50'>
-      <div className='pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(15,23,42,0.95),_rgba(2,6,23,1)_70%)]' />
-      <Navbar />
-
-      <main className='relative overflow-hidden'>
-        <div className='pointer-events-none absolute inset-x-0 -top-40 flex justify-center opacity-40 blur-3xl'>
-          <div className='h-64 w-[40rem] bg-emerald-500/40' />
-        </div>
-
-        <div className='mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8'>
-          <div className='grid gap-12 lg:grid-cols-2 lg:gap-16'>
-            {/* Left side - Form */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className='relative z-10 flex flex-col justify-center'>
-              <div className='space-y-2 mb-8'>
-                <h1 className='text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-50'>
-                  Welcome back
-                </h1>
-                <p className='text-slate-600 dark:text-slate-400'>
-                  Sign in to continue tracking your finances
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className='space-y-4'>
+    <AuthLayout>
+      <div className='mb-5'>
+        <h1 className='text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50'>Welcome back</h1>
+        <p className='mt-1.5 text-sm text-slate-600 dark:text-slate-400'>Sign in to continue tracking your finances</p>
+      </div>
+      <form onSubmit={handleSubmit} className='space-y-3'>
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID ? <>
+          <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} isLoading={loading} />
+          <div className='flex items-center gap-3 py-1'><div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' /><span className='text-xs text-slate-400'>or</span><div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' /></div>
+        </> : null}
                 {/* Email Input */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
+                  <label className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>
                     Email address
                   </label>
                   <input
@@ -240,7 +215,7 @@ const SignIn = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.15 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
+                  <label className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>
                     Password
                   </label>
                   <div className='relative'>
@@ -313,32 +288,6 @@ const SignIn = () => {
                   </span>
                 </motion.button>
 
-                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.3 }}
-                      className='flex items-center gap-3 py-2'>
-                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                      <span className='text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500'>
-                        or
-                      </span>
-                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.35 }}>
-                      <GoogleAuthButton
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        isLoading={loading}
-                      />
-                    </motion.div>
-                  </>
-                ) : null}
-
                 {/* Sign Up Link */}
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -352,60 +301,7 @@ const SignIn = () => {
                     Sign up
                   </Link>
                 </motion.p>
-              </form>
-            </motion.div>
-
-            {/* Right side - Benefits */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className='relative z-10 hidden lg:flex flex-col justify-center'>
-              <div className='space-y-6'>
-                <div className='inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-emerald-500/10 px-3 py-1 w-fit text-xs font-medium text-emerald-600 shadow-sm shadow-emerald-500/20 dark:border-emerald-400/40 dark:text-emerald-300'>
-                  <HiOutlineSparkles className='h-4 w-4' />
-                  What you get
-                </div>
-
-                <div className='space-y-4'>
-                  {benefits.map((benefit, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                      className='flex items-start gap-4 rounded-2xl border border-slate-200/60 bg-white/50 p-4 shadow-sm shadow-black/5 dark:border-trackit-border/60 dark:bg-slate-900/30'>
-                      <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-trackit-accent to-emerald-500 text-sm font-semibold text-white flex-shrink-0'>
-                        {benefit.number}
-                      </div>
-                      <div className='flex-1'>
-                        <p className='font-semibold text-slate-900 dark:text-slate-50'>
-                          {benefit.text}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                  className='rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-6 space-y-4'>
-                  <p className='text-sm font-semibold text-slate-900 dark:text-slate-50'>
-                    🚀 New features rolling out
-                  </p>
-                  <p className='text-sm text-slate-600 dark:text-slate-400'>
-                    Check back soon for AI-powered budget recommendations and
-                    spending alerts.
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </main>
-
+      </form>
       <SuspendedAccountModal
         open={suspendedModal.open}
         heading={suspendedModal.heading}
@@ -419,8 +315,7 @@ const SignIn = () => {
         }
       />
 
-      <Footer />
-    </div>
+    </AuthLayout>
   );
 };
 

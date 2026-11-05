@@ -1,11 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
-import { FiArrowRight, FiEye, FiEyeOff, FiCheck, FiX } from 'react-icons/fi';
-import { HiOutlineSparkles } from 'react-icons/hi';
+import { AnimatePresence, motion } from 'framer-motion';
+import { FiArrowRight, FiEye, FiEyeOff, FiCheck } from 'react-icons/fi';
 import { setUser, setLoading, setError } from '../store/slices/authSlice';
-import Navbar from '../components/layout/Navbar.jsx';
-import Footer from '../components/layout/Footer.jsx';
+import AuthLayout from '../components/auth/AuthLayout.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { register, googleLogin } from '../services/authService.js';
 import { useToast } from '../components/ui/ToastProvider.jsx';
@@ -164,297 +162,57 @@ const SignUp = () => {
     showToast('Google sign-in failed.', { type: 'error' });
   };
 
-  const features = [
-    { icon: '📊', text: 'Real-time expense tracking' },
-    { icon: '🤖', text: 'AI-powered insights' },
-    { icon: '🔒', text: 'Bank-level security' },
-  ];
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const [confirmTouched, setConfirmTouched] = useState(false)
+  const passwordMatches = Boolean(formData.confirmPassword && formData.password === formData.confirmPassword)
+  const showConfirmError = Boolean(formData.confirmPassword && confirmTouched && !passwordMatches)
 
   return (
-    <div className='min-h-screen bg-white text-slate-900 transition-colors duration-300 dark:bg-trackit-background dark:text-slate-50'>
-      <div className='pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(15,23,42,0.95),_rgba(2,6,23,1)_70%)]' />
-      <Navbar />
-
-      <main className='relative overflow-hidden'>
-        <div className='pointer-events-none absolute inset-x-0 -top-40 flex justify-center opacity-40 blur-3xl'>
-          <div className='h-64 w-[40rem] bg-emerald-500/40' />
+    <AuthLayout>
+      <div className='mb-4'>
+        <h1 className='text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50'>Create your account</h1>
+        <p className='mt-1.5 text-sm text-slate-600 dark:text-slate-400'>A clearer picture of your finances starts here.</p>
+      </div>
+      <form onSubmit={handleSubmit} className='space-y-2.5'>
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID ? <>
+          <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} isLoading={loading} />
+          <div className='flex items-center gap-3 py-0.5'><div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' /><span className='text-xs text-slate-400'>or</span><div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' /></div>
+        </> : null}
+        <div>
+          <label htmlFor='signup-name' className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>Full name</label>
+          <input id='signup-name' type='text' name='name' value={formData.name} onChange={handleChange} placeholder='Your name' autoComplete='name' className={getInputClass(false, 'py-2.5')} />
         </div>
-
-        <div className='mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8'>
-          <div className='grid gap-12 lg:grid-cols-2 lg:gap-16'>
-            {/* Left side - Form */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className='relative z-10 flex flex-col justify-center'>
-              <div className='space-y-2 mb-8'>
-                <h1 className='text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-50'>
-                  Create your account
-                </h1>
-                <p className='text-slate-600 dark:text-slate-400'>
-                  Join thousands tracking their finances smarter
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className='space-y-4'>
-                {/* Name Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
-                    Full name
-                  </label>
-                  <input
-                    type='text'
-                    name='name'
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder='John Doe'
-                    className='w-full rounded-xl border border-slate-200/60 bg-white/80 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm shadow-black/5 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:placeholder-slate-500 dark:focus:border-emerald-400'
-                  />
-                </motion.div>
-
-                {/* Email Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.15 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
-                    Email address
-                  </label>
-                  <input
-                    type='email'
-                    name='email'
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder='you@example.com'
-                    className={getInputClass(fieldErrors.email)}
-                  />
-                </motion.div>
-
-                {/* Password Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
-                    Password
-                  </label>
-                  <div className='relative'>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name='password'
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder='••••••••'
-                      className={getInputClass(fieldErrors.password, 'pr-10')}
-                    />
-                    <button
-                      type='button'
-                      onClick={() => setShowPassword(!showPassword)}
-                      className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'>
-                      {showPassword ? (
-                        <FiEyeOff className='h-4 w-4' />
-                      ) : (
-                        <FiEye className='h-4 w-4' />
-                      )}
-                    </button>
-                    </div>
-                </motion.div>
-
-                <div
-                  className='mt-2 text-xs text-slate-500'
-                  aria-live='polite'
-                >
-                  <p className='text-sm font-medium text-slate-700 dark:text-slate-300'>
-                    Password must include
-                  </p>
-                  <ul className='mt-2 grid gap-2 text-sm sm:grid-cols-2'>
-                    {requirementState.map((requirement) => (
-                      <li
-                        key={requirement.id}
-                        className='flex items-center gap-2 rounded-xl border border-slate-200/40 bg-white/60 px-3 py-2 text-slate-600 shadow-sm shadow-black/5 transition dark:border-trackit-border/60 dark:bg-slate-900/40 dark:text-slate-300'
-                      >
-                        {requirement.isValid ? (
-                          <FiCheck className='h-4 w-4 text-emerald-400' aria-hidden />
-                        ) : (
-                          <FiX className='h-4 w-4 text-rose-400' aria-hidden />
-                        )}
-                        <span
-                          className={
-                            requirement.isValid
-                              ? 'text-slate-900 dark:text-slate-50'
-                              : 'text-slate-600 dark:text-slate-400'
-                          }
-                        >
-                          {requirement.label}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Confirm Password Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.25 }}>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
-                    Confirm password
-                  </label>
-                  <div className='relative'>
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name='confirmPassword'
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder='••••••••'
-                      className={getInputClass(fieldErrors.confirmPassword, 'pr-10')}
-                    />
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'>
-                      {showConfirmPassword ? (
-                        <FiEyeOff className='h-4 w-4' />
-                      ) : (
-                        <FiEye className='h-4 w-4' />
-                      )}
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Terms Checkbox */}
-
-                {/* Submit Button */}
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.35 }}
-                  whileHover={isSignUpReady && !showSignUpLoading ? { y: -2 } : undefined}
-                  whileTap={isSignUpReady && !showSignUpLoading ? { scale: 0.98 } : undefined}
-                  type='submit'
-                  disabled={!isSignUpReady || showSignUpLoading}
-                  aria-busy={showSignUpLoading}
-                  className={getPrimaryButtonClass(showSignUpLoading || !isSignUpReady)}
-                >
-                  <span className='inline-flex items-center gap-2'>
-                    {showSignUpLoading ? (
-                      <>
-                        <LoadingIndicator />
-                        Creating account...
-                      </>
-                    ) : (
-                      <>
-                        Create account
-                        <FiArrowRight className='h-4 w-4' />
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-
-                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.4 }}
-                      className='flex items-center gap-3 py-2'>
-                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                      <span className='text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500'>
-                        or
-                      </span>
-                      <div className='h-px flex-1 bg-slate-200 dark:bg-trackit-border' />
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.45 }}>
-                      <GoogleAuthButton
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        isLoading={loading}
-                      />
-                    </motion.div>
-                  </>
-                ) : null}
-
-                {/* Sign In Link */}
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.4 }}
-                  className='text-center text-sm text-slate-600 dark:text-slate-400'>
-                  Already have an account?{' '}
-                  <Link
-                    to='/signin'
-                    className='font-medium text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'>
-                    Sign in
-                  </Link>
-                </motion.p>
-              </form>
-            </motion.div>
-
-            {/* Right side - Features */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className='relative z-10 hidden lg:flex flex-col justify-center'>
-              <div className='space-y-6'>
-                <div className='inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-emerald-500/10 px-3 py-1 w-fit text-xs font-medium text-emerald-600 shadow-sm shadow-emerald-500/20 dark:border-emerald-400/40 dark:text-emerald-300'>
-                  <HiOutlineSparkles className='h-4 w-4' />
-                  Why join TrackIt
-                </div>
-
-                <div className='space-y-4'>
-                  {features.map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                      className='flex items-start gap-4 rounded-2xl border border-slate-200/60 bg-white/50 p-4 shadow-sm shadow-black/5 dark:border-trackit-border/60 dark:bg-slate-900/30'>
-                      <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-2xl flex-shrink-0'>
-                        {feature.icon}
-                      </div>
-                      <div>
-                        <p className='font-semibold text-slate-900 dark:text-slate-50'>
-                          {feature.text}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                  className='rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-6 space-y-4'>
-                  <div className='flex items-center gap-2'>
-                    <FiCheck className='h-5 w-5 text-emerald-500' />
-                    <span className='font-semibold text-slate-900 dark:text-slate-50'>
-                      Free while in beta
-                    </span>
-                  </div>
-                  <p className='text-sm text-slate-600 dark:text-slate-400'>
-                    Get full access to all features at no cost. We're building
-                    something special and want your feedback.
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
+        <div>
+          <label htmlFor='signup-email' className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>Email address</label>
+          <input id='signup-email' type='email' name='email' value={formData.email} onChange={handleChange} placeholder='you@example.com' autoComplete='email' className={getInputClass(fieldErrors.email, 'py-2.5')} />
+        </div>
+        <div>
+          <label htmlFor='signup-password' className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>Password</label>
+          <div className='relative'>
+            <input id='signup-password' type={showPassword ? 'text' : 'password'} name='password' value={formData.password} onChange={handleChange} onFocus={() => setPasswordFocused(true)} onBlur={() => setPasswordFocused(false)} placeholder='Create a password' autoComplete='new-password' className={getInputClass(fieldErrors.password, 'py-2.5 pr-10')} />
+            <button type='button' aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)} className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'>{showPassword ? <FiEyeOff className='h-4 w-4' /> : <FiEye className='h-4 w-4' />}</button>
           </div>
+          <AnimatePresence initial={false}>
+            {(passwordFocused || formData.password) && <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className='mt-2 grid grid-cols-2 gap-x-3 gap-y-1 overflow-hidden text-[11px] text-slate-500' aria-live='polite'>
+              {requirementState.map((requirement) => <motion.li key={requirement.id} layout className={`flex items-center gap-1.5 ${requirement.isValid ? 'text-emerald-600 dark:text-emerald-400' : ''}`}><motion.span initial={false} animate={{ scale: requirement.isValid ? 1 : .85 }} className={`flex h-3.5 w-3.5 items-center justify-center rounded-full ${requirement.isValid ? 'bg-emerald-100 dark:bg-emerald-950' : 'bg-slate-100 dark:bg-slate-800'}`}>{requirement.isValid ? <FiCheck className='h-2.5 w-2.5' /> : <span className='h-1 w-1 rounded-full bg-current' />}</motion.span>{requirement.label}</motion.li>)}
+            </motion.ul>}
+          </AnimatePresence>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+        <div>
+          <label htmlFor='signup-confirm-password' className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>Confirm password</label>
+          <div className='relative'>
+            <input id='signup-confirm-password' type={showConfirmPassword ? 'text' : 'password'} name='confirmPassword' value={formData.confirmPassword} onChange={(e) => { handleChange(e); if (e.target.value) setConfirmTouched(true) }} onBlur={() => setConfirmTouched(true)} placeholder='Repeat your password' autoComplete='new-password' aria-invalid={showConfirmError || fieldErrors.confirmPassword} className={getInputClass(showConfirmError || fieldErrors.confirmPassword, 'py-2.5 pr-16')} />
+            {passwordMatches ? <motion.span initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className='absolute right-10 top-1/2 -translate-y-1/2 text-emerald-500' aria-label='Passwords match'><FiCheck className='h-4 w-4' /></motion.span> : null}
+            <button type='button' aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} onClick={() => setShowConfirmPassword(!showConfirmPassword)} className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'>{showConfirmPassword ? <FiEyeOff className='h-4 w-4' /> : <FiEye className='h-4 w-4' />}</button>
+          </div>
+          {(showConfirmError || fieldErrors.confirmPassword) && <p className='mt-1 text-[11px] text-rose-600 dark:text-rose-400' role='alert'>Passwords do not match.</p>}
+        </div>
+        <motion.button whileTap={isSignUpReady && !showSignUpLoading ? { scale: .98 } : undefined} type='submit' disabled={!isSignUpReady || showSignUpLoading} aria-busy={showSignUpLoading} className={getPrimaryButtonClass(showSignUpLoading || !isSignUpReady)}>
+          <span className='inline-flex items-center gap-2'>{showSignUpLoading ? <><LoadingIndicator />Creating account...</> : <>Create account<FiArrowRight className='h-4 w-4' /></>}</span>
+        </motion.button>
+        <p className='pt-1 text-center text-xs text-slate-600 dark:text-slate-400'>Already have an account? <Link to='/signin' className='font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400'>Sign in</Link></p>
+      </form>
+    </AuthLayout>
   );
 };
 
