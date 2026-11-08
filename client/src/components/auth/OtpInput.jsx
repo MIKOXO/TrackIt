@@ -121,7 +121,7 @@ const OtpInput = ({
   }
 
   const inputClasses = hasError
-    ? 'border-rose-500 focus:border-rose-400 focus:ring-rose-400/60 dark:border-rose-500 dark:focus:border-rose-400'
+    ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/10 dark:focus:border-rose-400'
     : 'border-slate-200/60 focus:border-emerald-400 focus:ring-emerald-500/20 dark:border-trackit-border/60 dark:focus:border-emerald-400'
 
   return (

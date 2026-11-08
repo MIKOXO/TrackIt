@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGoogleOAuth } from '@react-oauth/google';
 import { FcGoogle } from 'react-icons/fc';
+import AuthLoadingIndicator from './AuthLoadingIndicator.jsx';
 
 const GSI_MIN_WIDTH = 200;
 const GSI_MAX_WIDTH = 400;
@@ -138,7 +139,7 @@ const GoogleAuthButton = ({
         <span className='inline-flex h-6 w-6 items-center justify-center rounded-full bg-white ring-1 ring-slate-200/70 dark:bg-white/10 dark:ring-white/10'>
           <FcGoogle className='h-[18px] w-[18px]' />
         </span>
-        {isBusy ? 'Connecting to Google…' : label}
+        {isBusy ? <><AuthLoadingIndicator />Connecting to Google…</> : label}
       </div>
     </div>
   );
