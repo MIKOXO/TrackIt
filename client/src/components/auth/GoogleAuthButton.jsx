@@ -88,8 +88,8 @@ const GoogleAuthButton = ({
 
   const stateClasses =
     isHovered && !isBusy && !disabled
-      ? 'border-emerald-400/60 bg-emerald-50/70 text-emerald-950 shadow-[0_2px_4px_rgba(15,23,42,0.05),0_6px_14px_-4px_rgba(15,23,42,0.12)] dark:border-emerald-400/40 dark:bg-slate-900/90 dark:text-emerald-50 dark:shadow-[0_4px_16px_-4px_rgba(16,185,129,0.18)]'
-      : 'border-slate-200/60 bg-white/80 text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_3px_8px_-2px_rgba(15,23,42,0.08)] dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:shadow-none';
+      ? 'border-trackit-accent/50 bg-white text-slate-900 shadow-[0_2px_5px_-3px_rgba(2,6,23,0.18)] dark:border-trackit-accent/40 dark:bg-slate-900/90 dark:text-slate-50 dark:shadow-none'
+      : 'border-slate-200/70 bg-white/80 text-slate-900 shadow-[0_1px_2px_rgba(2,6,23,0.05)] dark:border-trackit-border/60 dark:bg-slate-900/60 dark:text-slate-50 dark:shadow-none';
 
   const surfaceClasses = [
     'pointer-events-none relative z-10 flex h-full w-full items-center justify-center gap-3 rounded-xl border px-5 text-sm font-semibold transition-all duration-200 ease-out',

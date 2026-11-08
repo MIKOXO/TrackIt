@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FiAlertCircle, FiCheckCircle, FiInfo, FiX } from 'react-icons/fi';
 
 const VARIANT_STYLES = {
@@ -25,37 +26,47 @@ const VARIANT_ICONS = {
   info: FiInfo,
 };
 
-const FormAlert = ({ variant = 'error', message, title, onDismiss, onPause, onResume }) => {
+const FormAlert = ({ variant = 'error', message, title, visible = true, className = '', onDismiss, onPause, onResume }) => {
   const styles = VARIANT_STYLES[variant] ?? VARIANT_STYLES.error;
   const Icon = VARIANT_ICONS[variant] ?? VARIANT_ICONS.error;
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div
-      role={variant === 'error' ? 'alert' : 'status'}
-      aria-live={variant === 'error' ? 'assertive' : 'polite'}
-      onMouseEnter={onPause}
-      onMouseLeave={onResume}
-      onFocus={onPause}
-      onBlur={onResume}
-      className={`flex items-start gap-2.5 rounded-2xl border px-4 py-3 ${styles.container}`}>
-      <span
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${styles.icon}`}>
-        <Icon className='h-4 w-4' aria-hidden='true' />
-      </span>
-      <div className='min-w-0 flex-1'>
-        {title ? <p className={`text-sm font-semibold ${styles.text}`}>{title}</p> : null}
-        <p className={`text-sm font-medium leading-5 ${styles.text}`}>{message}</p>
-      </div>
-      {onDismiss ? (
-        <button
-          type='button'
-          onClick={onDismiss}
-          aria-label='Dismiss notification'
-          className='shrink-0 rounded-full p-1 text-slate-400 transition hover:bg-black/5 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200'>
-          <FiX className='h-4 w-4' aria-hidden='true' />
-        </button>
-      ) : null}
-    </div>
+    <AnimatePresence initial={false}>
+      {visible ? <motion.div
+        key='form-alert'
+        initial={{ opacity: 0, height: 0, y: reduceMotion ? 0 : -6 }}
+        animate={{ opacity: 1, height: 'auto', y: 0 }}
+        exit={{ opacity: 0, height: 0, y: reduceMotion ? 0 : -4 }}
+        transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
+        className={`overflow-hidden ${className}`}>
+        <div
+          role={variant === 'error' ? 'alert' : 'status'}
+          aria-live={variant === 'error' ? 'assertive' : 'polite'}
+          onMouseEnter={onPause}
+          onMouseLeave={onResume}
+          onFocus={onPause}
+          onBlur={onResume}
+          className={`flex items-start gap-2.5 rounded-2xl border px-4 py-3 ${styles.container}`}>
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${styles.icon}`}>
+            <Icon className='h-4 w-4' aria-hidden='true' />
+          </span>
+          <div className='min-w-0 flex-1'>
+            {title ? <p className={`text-sm font-semibold ${styles.text}`}>{title}</p> : null}
+            <p className={`text-sm font-medium leading-5 ${styles.text}`}>{message}</p>
+          </div>
+          {onDismiss ? (
+            <button
+              type='button'
+              onClick={onDismiss}
+              aria-label='Dismiss notification'
+              className='shrink-0 rounded-full p-1 text-slate-400 transition hover:bg-black/5 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200'>
+              <FiX className='h-4 w-4' aria-hidden='true' />
+            </button>
+          ) : null}
+        </div>
+      </motion.div> : null}
+    </AnimatePresence>
   );
 };
 
