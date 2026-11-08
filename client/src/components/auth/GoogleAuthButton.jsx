@@ -31,6 +31,7 @@ const GoogleAuthButton = ({
   useEffect(() => {
     const node = wrapperRef.current;
     if (!node) return undefined;
+
     let frame = 0;
     const applyWidth = () => {
       const next = node.clientWidth;
@@ -63,7 +64,7 @@ const GoogleAuthButton = ({
           onErrorRef.current?.();
           return;
         }
-        onSuccessRef.current(credentialResponse);
+        onSuccessRef.current?.(credentialResponse);
       },
     });
 
@@ -123,7 +124,7 @@ const GoogleAuthButton = ({
       {/* Single invisible official GSI button, stretched to cover the full surface */}
       <div
         ref={hostRef}
-        className='absolute inset-0 overflow-hidden opacity-0 [&_iframe]:origin-top-left [&_iframe]:cursor-pointer [&_iframe]:border-0 [&_iframe]:[transform:scale(var(--gsi-scale-x),_var(--gsi-scale-y))]'
+        className={`absolute inset-0 overflow-hidden opacity-0 ${disabled || isBusy ? 'cursor-not-allowed' : 'cursor-pointer'} [&_*]:cursor-inherit [&_iframe]:origin-top-left [&_iframe]:cursor-pointer [&_iframe]:border-0 [&_iframe]:[transform:scale(var(--gsi-scale-x),_var(--gsi-scale-y))]`}
         style={{
           '--gsi-scale-x': scaleX.toFixed(4),
           '--gsi-scale-y': scaleY.toFixed(4),
