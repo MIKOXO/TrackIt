@@ -62,6 +62,13 @@ const ForgotPassword = () => {
     resume,
   } = useTimedMessage(AUTH_FEEDBACK_TIMEOUTS.blockError)
 
+  const {
+    message: confirmInlineMessage,
+    visible: confirmInlineVisible,
+    show: showConfirmMismatch,
+    clear: clearConfirmMismatch,
+  } = useTimedMessage(AUTH_FEEDBACK_TIMEOUTS.clientValidation)
+
   const [step, setStep] = useState('request')
   const [email, setEmail] = useState(location.state?.email ?? '')
   const [code, setCode] = useState('')
@@ -106,7 +113,8 @@ const ForgotPassword = () => {
   )
   const passwordIsValid = requirementState.every((requirement) => requirement.isValid)
   const passwordsMatch = password.length > 0 && password === confirmPassword
-  const confirmMismatch = Boolean(confirmTouched && confirmPassword && !passwordsMatch)
+  const confirmMismatch = confirmInlineVisible
+  const isResetReady = code.length === 6 && passwordIsValid && passwordsMatch
 
   const handleBlockDismiss = () => {
     clear()
@@ -138,6 +146,16 @@ const ForgotPassword = () => {
       serverFieldErrorsRef.current.delete(field)
       delete fieldErrorTimersRef.current[field]
     }, AUTH_FEEDBACK_TIMEOUTS.serverField)
+  }
+
+  const setClientFieldError = (field, message) => {
+    serverFieldErrorsRef.current.delete(field)
+    setFieldErrors((current) => ({ ...current, [field]: message }))
+    clearFieldErrorTimer(field)
+    fieldErrorTimersRef.current[field] = window.setTimeout(() => {
+      delete fieldErrorTimersRef.current[field]
+      setFieldErrors((current) => current[field] === message ? { ...current, [field]: null } : current)
+    }, AUTH_FEEDBACK_TIMEOUTS.clientValidation)
   }
 
   const clearFieldErrorWhenValid = (field, valid) => {
@@ -191,7 +209,7 @@ const ForgotPassword = () => {
     serverFieldErrorsRef.current.delete('email')
     setFieldErrors((current) => ({ ...current, email: null }))
     if (!emailIsValid) {
-      setFieldErrors((prev) => ({ ...prev, email: email.trim() ? 'Enter a valid email address.' : 'Email address is required.' }))
+      setClientFieldError('email', email.trim() ? 'Enter a valid email address.' : 'Email address is required.')
       emailInputRef.current?.focus()
       return
     }
@@ -258,22 +276,19 @@ const ForgotPassword = () => {
     clear()
     setRateLimitSeconds(0)
     if (code.length !== 6) {
-      setFieldErrors((current) => ({ ...current, code: 'Enter the 6-digit code from your email.' }))
+      setClientFieldError('code', 'Enter the 6-digit code from your email.')
       setStep('otp')
       codeInputRef.current?.focus()
       return
     }
     if (!passwordIsValid) {
       const unmet = requirementState.filter((requirement) => !requirement.isValid)
-      setFieldErrors((prev) => ({
-        ...prev,
-        password: `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`,
-      }))
+      setClientFieldError('password', `Password must include ${unmet.map((requirement) => requirement.label).join(', ')}`)
       passwordInputRef.current?.focus()
       return
     }
     if (!passwordsMatch) {
-      setFieldErrors((prev) => ({ ...prev, confirmPassword: 'Passwords must match.' }))
+      setClientFieldError('confirmPassword', 'Passwords must match.')
       confirmPasswordInputRef.current?.focus()
       return
     }
@@ -356,17 +371,15 @@ const ForgotPassword = () => {
               </div>
             </div>
 
-            {blockVisible ? (
-              <div className='mt-6'>
-                <FormAlert
+            <FormAlert
+                  visible={blockVisible}
+                  className='mt-6'
                   variant={blockVariant}
                   message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
                   onDismiss={handleBlockDismiss}
                   onPause={pause}
                   onResume={resume}
                 />
-              </div>
-            ) : null}
 
             {step === 'request' ? (
               <>
@@ -391,6 +404,10 @@ const ForgotPassword = () => {
                         setEmail(event.target.value)
                         clearFieldErrorWhenValid('email', /^\S+@\S+\.\S+$/.test(event.target.value.trim()))
                       }}
+                      onBlur={() => {
+                        if (!email.trim()) setClientFieldError('email', 'Email address is required.')
+                        else if (!emailIsValid) setClientFieldError('email', 'Enter a valid email address.')
+                      }}
                       required
                       placeholder='you@example.com'
                       autoComplete='email'
@@ -403,9 +420,9 @@ const ForgotPassword = () => {
 
                   <button
                     type='submit'
-                    disabled={resetRequestLoading || isRateLimited}
+                    disabled={!emailIsValid || resetRequestLoading || isRateLimited}
                     aria-busy={resetRequestLoading}
-                    className={getPrimaryButtonClass(resetRequestLoading || isRateLimited)}>
+                    className={getPrimaryButtonClass(!emailIsValid || resetRequestLoading || isRateLimited)}>
                     <span className='inline-flex items-center gap-2'>
                       {resetRequestLoading ? (
                         <>
@@ -500,8 +517,13 @@ const ForgotPassword = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(event) => {
-                        setPassword(event.target.value)
+                        const nextPassword = event.target.value
+                        setPassword(nextPassword)
                         clearFieldErrorWhenValid('password', PASSWORD_REQUIREMENTS.every((requirement) => requirement.test(event.target.value)))
+                        if (confirmTouched && confirmPassword) {
+                          if (nextPassword !== confirmPassword) showConfirmMismatch('Passwords must match.', 'error')
+                          else clearConfirmMismatch()
+                        }
                         dispatch(clearAuthFeedback())
                       }}
                       required
@@ -561,12 +583,19 @@ const ForgotPassword = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(event) => {
-                        setConfirmPassword(event.target.value)
+                        const nextConfirmPassword = event.target.value
+                        setConfirmPassword(nextConfirmPassword)
                         setConfirmTouched(true)
                         clearFieldErrorWhenValid('confirmPassword', Boolean(event.target.value && event.target.value === password))
+                        if (nextConfirmPassword && nextConfirmPassword !== password) showConfirmMismatch('Passwords must match.', 'error')
+                        else clearConfirmMismatch()
                         dispatch(clearAuthFeedback())
                       }}
-                      onBlur={() => setConfirmTouched(true)}
+                      onBlur={() => {
+                        setConfirmTouched(true)
+                        if (confirmPassword && !passwordsMatch) showConfirmMismatch('Passwords must match.', 'error')
+                        else clearConfirmMismatch()
+                      }}
                       required
                       placeholder='••••••••'
                       autoComplete='new-password'
@@ -584,16 +613,16 @@ const ForgotPassword = () => {
                   </div>
                   <FieldError
                     id='reset-confirm-password-error'
-                    message={fieldErrors.confirmPassword || 'Passwords must match.'}
+                    message={fieldErrors.confirmPassword || confirmInlineMessage || 'Passwords must match.'}
                     visible={Boolean(fieldErrors.confirmPassword || confirmMismatch)}
                   />
                 </div>
 
                 <button
                   type='submit'
-                  disabled={passwordResetLoading || isRateLimited}
+                  disabled={!isResetReady || passwordResetLoading || isRateLimited}
                   aria-busy={passwordResetLoading}
-                  className={getPrimaryButtonClass(passwordResetLoading || isRateLimited)}>
+                  className={getPrimaryButtonClass(!isResetReady || passwordResetLoading || isRateLimited)}>
                   <span className='inline-flex items-center gap-2'>
                     {passwordResetLoading ? (
                       <>

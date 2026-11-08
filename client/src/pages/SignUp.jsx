@@ -53,6 +53,13 @@ const SignUp = () => {
     resume: resumeBlockAlert,
   } = useTimedMessage(AUTH_FEEDBACK_TIMEOUTS.blockError);
 
+  const {
+    message: confirmInlineMessage,
+    visible: confirmInlineVisible,
+    show: showConfirmMismatch,
+    clear: clearConfirmMismatch,
+  } = useTimedMessage(AUTH_FEEDBACK_TIMEOUTS.clientValidation);
+
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const isRateLimited = rateLimitSeconds > 0;
 
@@ -93,6 +100,10 @@ const SignUp = () => {
       clearFieldErrorTimer(name);
       setFieldErrors((prev) => ({ ...prev, [name]: null }));
     }
+    if (name === 'password' && confirmTouched && formData.confirmPassword) {
+      if (value !== formData.confirmPassword) showConfirmMismatch('Passwords must match.', 'error');
+      else clearConfirmMismatch();
+    }
   };
 
   const clearFieldErrorTimer = (field) => {
@@ -121,7 +132,24 @@ const SignUp = () => {
     fieldErrorTimersRef.current[field] = timer;
   };
 
+  const setClientFieldError = (field, message) => {
+    serverFieldErrorsRef.current.delete(field);
+    setFieldErrors((prev) => ({ ...prev, [field]: message }));
+    clearFieldErrorTimer(field);
+    fieldErrorTimersRef.current[field] = window.setTimeout(() => {
+      delete fieldErrorTimersRef.current[field];
+      setFieldErrors((prev) => prev[field] === message ? { ...prev, [field]: null } : prev);
+    }, AUTH_FEEDBACK_TIMEOUTS.clientValidation);
+  };
+
   const showSignUpLoading = isSubmitting || loading;
+  const isSignUpComplete = Boolean(
+    formData.name.trim() &&
+      /^\S+@\S+\.\S+$/.test(formData.email.trim()) &&
+      requirementState.every((requirement) => requirement.isValid) &&
+      formData.confirmPassword &&
+      formData.password === formData.confirmPassword,
+  );
 
   useEffect(
     () => () => {
@@ -162,31 +190,25 @@ const SignUp = () => {
 
     try {
       if (!formData.name.trim()) {
-        setFieldErrors((prev) => ({ ...prev, name: 'Name is required.' }));
+        setClientFieldError('name', 'Name is required.');
         nameInputRef.current?.focus();
         return;
       }
       if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
-        setFieldErrors((prev) => ({ ...prev, email: 'Enter a valid email address.' }));
+        setClientFieldError('email', 'Enter a valid email address.');
         emailInputRef.current?.focus();
         return;
       }
       const unmetRequirements = requirementState.filter((requirement) => !requirement.isValid);
 
       if (unmetRequirements.length) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          password: `Password must include ${unmetRequirements.map((requirement) => requirement.label).join(', ')}`,
-        }));
+        setClientFieldError('password', `Password must include ${unmetRequirements.map((requirement) => requirement.label).join(', ')}`);
         passwordInputRef.current?.focus();
         return;
       }
 
       if (formData.password !== formData.confirmPassword) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          confirmPassword: 'Passwords must match.',
-        }));
+        setClientFieldError('confirmPassword', 'Passwords must match.');
         confirmPasswordInputRef.current?.focus();
         return;
       }
@@ -264,7 +286,7 @@ const SignUp = () => {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
   const passwordMatches = Boolean(formData.confirmPassword && formData.password === formData.confirmPassword);
-  const showConfirmError = Boolean(formData.confirmPassword && confirmTouched && !passwordMatches);
+  const showConfirmError = confirmInlineVisible;
 
   return (
     <AuthLayout>
@@ -272,15 +294,15 @@ const SignUp = () => {
         <h1 className='text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50'>Create your account</h1>
         <p className='mt-1.5 text-sm text-slate-600 dark:text-slate-400'>A clearer picture of your finances starts here.</p>
       </div>
-      {blockVisible ? (
-        <FormAlert
+      <FormAlert
+          visible={blockVisible}
+          className='mb-3'
           variant={blockVariant}
           message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
           onDismiss={() => { clearBlockAlert(); setRateLimitSeconds(0); }}
           onPause={pauseBlockAlert}
           onResume={resumeBlockAlert}
         />
-      ) : null}
       <form onSubmit={handleSubmit} noValidate className='space-y-2.5'>
         {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
           <>
@@ -294,7 +316,7 @@ const SignUp = () => {
         ) : null}
         <div>
           <label htmlFor='signup-name' className='mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300'>Full name</label>
-          <input id='signup-name' ref={nameInputRef} type='text' name='name' value={formData.name} onChange={handleChange} placeholder='Your name' autoComplete='name' required aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'signup-name-error' : undefined} className={getInputClass(Boolean(fieldErrors.name), 'py-2.5')} />
+          <input id='signup-name' ref={nameInputRef} type='text' name='name' value={formData.name} onChange={handleChange} onBlur={() => { if (!formData.name.trim()) setClientFieldError('name', 'Name is required.'); }} placeholder='Your name' autoComplete='name' required aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'signup-name-error' : undefined} className={getInputClass(Boolean(fieldErrors.name), 'py-2.5')} />
           <FieldError id='signup-name-error' message={fieldErrors.name} visible={Boolean(fieldErrors.name)} />
         </div>
         <div>
@@ -307,6 +329,10 @@ const SignUp = () => {
             name='email'
             value={formData.email}
             onChange={handleChange}
+            onBlur={() => {
+              if (!formData.email.trim()) setClientFieldError('email', 'Email address is required.');
+              else if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) setClientFieldError('email', 'Enter a valid email address.');
+            }}
             placeholder='you@example.com'
             autoComplete='email'
             aria-invalid={Boolean(fieldErrors.email)}
@@ -354,9 +380,16 @@ const SignUp = () => {
               value={formData.confirmPassword}
               onChange={(e) => {
                 handleChange(e);
-                if (e.target.value) setConfirmTouched(true);
+                setConfirmTouched(true);
+                if (e.target.value && e.target.value !== formData.password) showConfirmMismatch('Passwords must match.', 'error');
+                else clearConfirmMismatch();
               }}
-              onBlur={() => setConfirmTouched(true)}
+              onBlur={() => {
+                setConfirmTouched(true);
+                if (!formData.confirmPassword) setClientFieldError('confirmPassword', 'Confirm password is required.');
+                else if (!passwordMatches) showConfirmMismatch('Passwords must match.', 'error');
+                else clearConfirmMismatch();
+              }}
               placeholder='Repeat your password'
               required
               autoComplete='new-password'
@@ -369,11 +402,11 @@ const SignUp = () => {
           </div>
           <FieldError
             id='signup-confirm-password-error'
-            message={fieldErrors.confirmPassword || 'Passwords must match.'}
+            message={fieldErrors.confirmPassword || confirmInlineMessage || 'Passwords must match.'}
             visible={Boolean(showConfirmError || fieldErrors.confirmPassword)}
           />
         </div>
-        <motion.button whileTap={!showSignUpLoading && !isRateLimited ? { scale: .98 } : undefined} type='submit' disabled={showSignUpLoading || isRateLimited} aria-busy={showSignUpLoading} className={getPrimaryButtonClass(showSignUpLoading || isRateLimited)}>
+        <motion.button whileHover={isSignUpComplete && !showSignUpLoading && !isRateLimited ? { y: -1 } : undefined} whileTap={isSignUpComplete && !showSignUpLoading && !isRateLimited ? { scale: .99 } : undefined} type='submit' disabled={!isSignUpComplete || showSignUpLoading || isRateLimited} aria-busy={showSignUpLoading} className={getPrimaryButtonClass(!isSignUpComplete || showSignUpLoading || isRateLimited)}>
           <span className='inline-flex items-center gap-2'>{showSignUpLoading ? <><LoadingIndicator />Creating account...</> : <>Create account<FiArrowRight className='h-4 w-4' /></>}</span>
         </motion.button>
         <p className='pt-1 text-center text-xs text-slate-600 dark:text-slate-400'>Already have an account? <Link to='/signin' className='font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400'>Sign in</Link></p>

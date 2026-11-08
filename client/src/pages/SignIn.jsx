@@ -98,7 +98,7 @@ const SignIn = () => {
     return `${inputBaseClasses} ${stateClass} ${extra}`.trim();
   };
 
-  const isSignInReady = Boolean(formData.email.trim() && formData.password);
+  const isSignInComplete = /^\S+@\S+\.\S+$/.test(formData.email.trim()) && Boolean(formData.password);
   const showSignInLoading = isSubmitting || loading;
 
   useEffect(
@@ -117,6 +117,14 @@ const SignIn = () => {
     }, 1000);
     return () => window.clearInterval(timer);
   }, [isRateLimited]);
+
+  useEffect(() => {
+    if (!suspendedModal.open) return undefined;
+    const timer = window.setTimeout(() => {
+      setSuspendedModal((current) => ({ ...current, open: false }));
+    }, AUTH_FEEDBACK_TIMEOUTS.blockError);
+    return () => window.clearTimeout(timer);
+  }, [suspendedModal.open]);
 
   useEffect(() => {
     if (isRateLimited) {
@@ -160,6 +168,16 @@ const SignIn = () => {
     fieldErrorTimersRef.current[field] = timer;
   };
 
+  const setClientFieldError = (field, message) => {
+    serverFieldErrorsRef.current.delete(field);
+    setFieldErrors((prev) => ({ ...prev, [field]: message }));
+    clearFieldErrorTimer(field);
+    fieldErrorTimersRef.current[field] = window.setTimeout(() => {
+      delete fieldErrorTimersRef.current[field];
+      setFieldErrors((prev) => prev[field] === message ? { ...prev, [field]: null } : prev);
+    }, AUTH_FEEDBACK_TIMEOUTS.clientValidation);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -191,19 +209,19 @@ const SignIn = () => {
 
     try {
       if (!formData.email.trim()) {
-        setFieldErrors({ email: 'Email address is required.', password: null });
+        setClientFieldError('email', 'Email address is required.');
         emailInputRef.current?.focus();
         return;
       }
 
       if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
-        setFieldErrors({ email: 'Enter a valid email address.', password: null });
+        setClientFieldError('email', 'Enter a valid email address.');
         emailInputRef.current?.focus();
         return;
       }
 
       if (!formData.password) {
-        setFieldErrors({ email: null, password: 'Password is required.' });
+        setClientFieldError('password', 'Password is required.');
         passwordInputRef.current?.focus();
         return;
       }
@@ -302,15 +320,15 @@ const SignIn = () => {
         <h1 className='text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50'>Welcome back</h1>
         <p className='mt-1.5 text-sm text-slate-600 dark:text-slate-400'>Sign in to continue tracking your finances</p>
       </div>
-      {blockVisible ? (
-        <FormAlert
-          variant={blockVariant}
-          message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
-          onDismiss={() => { clearBlockAlert(); setRateLimitSeconds(0); }}
-        onPause={pauseBlockAlert}
-        onResume={resumeBlockAlert}
-      />
-      ) : null}
+      <FormAlert
+            visible={blockVisible}
+            className='mb-4'
+            variant={blockVariant}
+            message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
+            onDismiss={() => { clearBlockAlert(); setRateLimitSeconds(0); }}
+            onPause={pauseBlockAlert}
+            onResume={resumeBlockAlert}
+          />
       <form onSubmit={handleSubmit} noValidate className='space-y-3'>
         {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
           <>
@@ -338,6 +356,10 @@ const SignIn = () => {
             name='email'
             value={formData.email}
             onChange={handleChange}
+            onBlur={() => {
+              if (!formData.email.trim()) setClientFieldError('email', 'Email address is required.');
+              else if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) setClientFieldError('email', 'Enter a valid email address.');
+            }}
             placeholder='you@example.com'
             autoComplete='email'
             aria-invalid={Boolean(fieldErrors.email)}
@@ -368,6 +390,9 @@ const SignIn = () => {
               name='password'
               value={formData.password}
               onChange={handleChange}
+              onBlur={() => {
+                if (!formData.password) setClientFieldError('password', 'Password is required.');
+              }}
               placeholder='••••••••'
               autoComplete='current-password'
               aria-invalid={Boolean(fieldErrors.password)}
@@ -407,13 +432,13 @@ const SignIn = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.25 }}
-          whileHover={isSignInReady && !showSignInLoading && !isRateLimited ? { y: -2 } : undefined}
-          whileTap={isSignInReady && !showSignInLoading && !isRateLimited ? { scale: 0.98 } : undefined}
+          whileHover={isSignInComplete && !showSignInLoading && !isRateLimited ? { y: -1 } : undefined}
+          whileTap={isSignInComplete && !showSignInLoading && !isRateLimited ? { scale: 0.99 } : undefined}
           type='submit'
-          disabled={showSignInLoading || isRateLimited}
+          disabled={!isSignInComplete || showSignInLoading || isRateLimited}
           aria-busy={showSignInLoading}
           className={getPrimaryButtonClass(
-            showSignInLoading || isRateLimited,
+            !isSignInComplete || showSignInLoading || isRateLimited,
           )}>
           <span className='inline-flex items-center gap-2'>
             {showSignInLoading ? (

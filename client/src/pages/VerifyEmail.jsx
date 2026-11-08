@@ -83,7 +83,17 @@ const VerifyEmail = () => {
   const activeError = verificationError || resendError
   const mappedError = useMemo(() => mapAuthError(activeError, 'Unable to verify that code.'), [activeError])
   const isRateLimited = rateLimitSeconds > 0
-  const canSubmit = emailIsValid && !verificationLoading && !isRateLimited
+  const canSubmit = emailIsValid && code.length === 6 && !verificationLoading && !isRateLimited
+
+  const setClientOtpError = (message) => {
+    otpFieldErrorServerRef.current = false
+    window.clearTimeout(fieldErrorTimerRef.current)
+    setOtpFieldError(message)
+    fieldErrorTimerRef.current = window.setTimeout(
+      () => setOtpFieldError(null),
+      AUTH_FEEDBACK_TIMEOUTS.clientValidation,
+    )
+  }
 
   useEffect(() => () => {
     window.clearTimeout(fieldErrorTimerRef.current)
@@ -175,8 +185,7 @@ const VerifyEmail = () => {
     clear()
     setRateLimitSeconds(0)
     if (submittedCode.length !== 6) {
-      otpFieldErrorServerRef.current = false
-      setOtpFieldError('Enter the 6-digit code from your email.')
+      setClientOtpError('Enter the 6-digit code from your email.')
       otpInputRef.current?.focus()
       return
     }
@@ -272,8 +281,8 @@ const VerifyEmail = () => {
               .
             </p>
 
-            {blockVisible ? (
-              <FormAlert
+            <FormAlert
+                visible={blockVisible}
                 variant={blockVariant}
                 message={rateLimitSeconds > 0 ? `${blockMessage} Try again in ${rateLimitSeconds}s.` : blockMessage}
                 title={mappedError?.code ? getErrorHeading(mappedError.code) : undefined}
@@ -281,7 +290,6 @@ const VerifyEmail = () => {
                 onPause={pause}
                 onResume={resume}
               />
-            ) : null}
 
             <form
               onSubmit={(event) => {
