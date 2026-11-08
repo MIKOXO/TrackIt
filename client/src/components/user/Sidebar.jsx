@@ -9,7 +9,6 @@ import {
   FiLogOut,
   FiMenu,
   FiX,
-  FiChevronRight,
 } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useDispatch } from 'react-redux';
@@ -158,12 +157,9 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems }) => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className='fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200/60 bg-white/95 backdrop-blur-sm dark:border-trackit-border/60 dark:bg-slate-900/95 lg:hidden'>
             {/* Logo */}
-            <div className='flex h-16 items-center gap-3 border-b border-slate-200/60 px-6 dark:border-trackit-border/60'>
-              <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-trackit-accent to-emerald-500'>
-                <FiChevronRight className='h-5 w-5 text-white' />
-              </div>
-              <h1 className='text-lg font-bold text-slate-900 dark:text-slate-50'>
-                TrackIt
+            <div className='flex h-16 items-center px-6 border-b border-slate-200/60 dark:border-trackit-border/60'>
+              <h1 className='text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50'>
+                Track<span className='text-trackit-accent'>It.</span>
               </h1>
             </div>
 
