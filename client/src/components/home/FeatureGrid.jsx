@@ -1,88 +1,108 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FiBarChart2, FiShield, FiSmartphone } from 'react-icons/fi'
-import { HiOutlineSparkles } from 'react-icons/hi'
+import { SPRING, stagger, springUp } from './motionPresets.js'
 
-const features = [
+const shifts = [
   {
-    icon: HiOutlineSparkles,
-    title: 'Ask-first AI assistant',
-    description:
-      'Chat with TrackIt about your money like you would with a friend. No formulas, no dashboards overload.',
-    badge: 'AI-native',
+    from: 'Tab-hopping between spreadsheets',
+    to: 'One dashboard that explains itself',
   },
   {
-    icon: FiBarChart2,
-    title: 'Intuitive financial dashboard',
-    description:
-      'See income vs expenses, category breakdowns, and trends in a clean, distraction-free view.',
-    badge: 'Clarity',
+    from: 'Guessing where the money went',
+    to: 'Plain-language answers on demand',
   },
   {
-    icon: FiShield,
-    title: 'Secure by design',
-    description:
-      'Encrypted communication, sensible defaults, and privacy-first architecture from day one.',
-    badge: 'Secure',
+    from: 'Month-end surprises',
+    to: 'Budget watch before it bites',
   },
   {
-    icon: FiSmartphone,
-    title: 'Works where you live',
-    description:
-      'Responsive layout that feels at home on your laptop during deep dives and on mobile on the go.',
-    badge: 'Responsive',
+    from: 'Dashboards built to sell your data',
+    to: 'Private, encrypted, and yours',
   },
 ]
 
+const arrow = {
+  hidden: { x: -10, opacity: 0 },
+  show: { x: 0, opacity: 1, transition: SPRING.snappy },
+}
+
 const FeatureGrid = () => {
   return (
-    <section className="border-t border-slate-200/60 bg-white text-slate-900 dark:border-trackit-border/70 dark:bg-trackit-background dark:text-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">
-              A calmer way to understand money
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-300">
-              TrackIt helps you zoom out of spreadsheets and into clear, guided insights — powered by
-              your data and an integrated AI assistant.
-            </p>
-          </div>
-          <p className="text-xs text-trackit-muted">Designed for students, freelancers, and young professionals who want control without overwhelm.</p>
-        </div>
+    <section
+      id="calmer-way"
+      className="scroll-mt-24 border-t border-slate-200/60 bg-gradient-to-b from-emerald-50/60 via-white to-white text-slate-900 dark:border-trackit-border/70 dark:from-emerald-500/[0.05] dark:via-trackit-background dark:to-trackit-background dark:text-slate-50"
+    >
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+          variants={stagger(0.09)}
+          className="max-w-2xl"
+        >
+          <motion.p
+            variants={springUp()}
+            className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-emerald-500 dark:text-emerald-300"
+          >
+            The TrackIt way
+          </motion.p>
+          <motion.h2
+            variants={springUp()}
+            className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl dark:text-slate-50"
+          >
+            Money, minus{' '}
+            <span className="bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400 bg-clip-text pb-[0.35em] -mb-[0.35em] text-transparent">
+              the noise.
+            </span>
+          </motion.h2>
+          <motion.p variants={springUp()} className="mt-4 text-sm leading-6 text-slate-500 sm:text-base dark:text-slate-400">
+            The busywork goes. The signal stays. Here&apos;s what changes.
+          </motion.p>
+        </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={stagger(0.12, 0.05)}
+          className="mt-14 grid gap-4 sm:grid-cols-2"
         >
-          {features.map((feature, index) => {
-            const Icon = feature.icon
+          {shifts.map((shift) => (
+            <motion.article
+              key={shift.to}
+              variants={springUp()}
+              whileHover={{ y: -4 }}
+              transition={SPRING.snappy}
+              className="group flex flex-col items-start gap-4 rounded-2xl border border-emerald-900/[0.06] bg-white/80 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05)] backdrop-blur transition-colors duration-300 hover:border-emerald-400/50 sm:flex-row sm:items-center sm:gap-6 sm:p-6 dark:border-white/[0.06] dark:bg-slate-950/50 dark:hover:border-emerald-400/30"
+            >
+              <div className="min-w-0 sm:w-[44%]">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                  From
+                </p>
+                <p className="mt-1.5 text-sm text-slate-500 line-through decoration-emerald-400/50 [text-decoration-thickness:1.5px] dark:text-slate-500">
+                  {shift.from}
+                </p>
+              </div>
 
-            return (
-              <motion.article
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="cursor-pointer group flex flex-col rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 shadow-sm shadow-black/5 ease-in-out duration-300 hover:-translate-y-1 hover:border-trackit-accent/70 hover:shadow-xl hover:shadow-emerald-500/30 dark:border-trackit-border/80 dark:bg-slate-950/60"
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-400/40 group-hover:bg-emerald-500/15">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="rounded-full bg-slate-100/80 px-2 py-0.5 text-[0.65rem] font-medium text-trackit-muted ring-1 ring-slate-200/80 group-hover:text-emerald-300 group-hover:ring-emerald-400/60 dark:bg-slate-900/60 dark:text-slate-300 dark:ring-trackit-border/60">
-                    {feature.badge}
-                  </span>
-                </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{feature.title}</h3>
-                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{feature.description}</p>
-              </motion.article>
-            )
-          })}
+              <span className="-rotate-90 self-start transition-transform duration-200 group-hover:translate-x-1 sm:rotate-0 sm:self-auto">
+                <motion.span
+                  variants={arrow}
+                  className="block text-xl font-semibold text-emerald-500 dark:text-emerald-300"
+                >
+                  →
+                </motion.span>
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-emerald-500/90 dark:text-emerald-300/80">
+                  To
+                </p>
+                <p className="mt-1.5 text-base font-semibold text-slate-900 dark:text-slate-50">
+                  {shift.to}
+                </p>
+              </div>
+            </motion.article>
+          ))}
         </motion.div>
       </div>
     </section>
