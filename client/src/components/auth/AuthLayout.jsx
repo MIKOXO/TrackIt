@@ -25,7 +25,7 @@ const AuthShowcase = () => {
   return <motion.aside
     initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.12 }}
     onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}
-    className='relative hidden min-h-[470px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white/40 p-8 dark:border-trackit-border/80 dark:bg-slate-900/20 lg:flex lg:flex-col lg:justify-between'>
+    className='relative hidden min-h-[470px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white/40 p-8 dark:border-trackit-border/80 dark:bg-slate-900/20 lg:flex lg:h-[640px] lg:flex-col lg:justify-between'>
     <div>
       <p className='text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400'>A clearer view</p>
       <h2 className='mt-3 max-w-sm text-3xl font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-50'>Your money, <span className='text-emerald-600 dark:text-emerald-400'>in perspective.</span></h2>
