@@ -6,7 +6,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/layout/Navbar.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import OtpInput from '../components/auth/OtpInput.jsx'
-import LoadingIndicator from '../components/ui/LoadingIndicator.jsx'
+import AuthLoadingIndicator from '../components/auth/AuthLoadingIndicator.jsx'
+import submitAuthFormOnEnter from '../utils/submitAuthFormOnEnter.js'
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js'
 import FieldError from '../components/auth/FieldError.jsx'
 import FormAlert from '../components/auth/FormAlert.jsx'
@@ -388,7 +389,7 @@ const ForgotPassword = () => {
                   6-digit reset code that expires in 10 minutes.
                 </p>
 
-                <form onSubmit={handleRequest} noValidate className='mt-8 space-y-6'>
+                <form onSubmit={handleRequest} onKeyDown={submitAuthFormOnEnter} noValidate className='mt-8 space-y-6'>
                   <div>
                     <label
                       htmlFor='reset-email'
@@ -413,7 +414,7 @@ const ForgotPassword = () => {
                       autoComplete='email'
                       aria-invalid={Boolean(fieldErrors.email)}
                       aria-describedby={fieldErrors.email ? 'reset-email-error' : undefined}
-                      className={inputClasses}
+                      className={`${inputClasses} ${fieldErrors.email ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/10' : ''}`}
                     />
                     <FieldError id='reset-email-error' message={fieldErrors.email} visible={Boolean(fieldErrors.email)} />
                   </div>
@@ -426,7 +427,7 @@ const ForgotPassword = () => {
                     <span className='inline-flex items-center gap-2'>
                       {resetRequestLoading ? (
                         <>
-                          <LoadingIndicator />
+                          <AuthLoadingIndicator />
                           Sending code...
                         </>
                       ) : (
@@ -462,7 +463,7 @@ const ForgotPassword = () => {
                   </button>
                 </div>
 
-                <form onSubmit={handleReset} noValidate className='mt-8 space-y-6'>
+                <form onSubmit={handleReset} onKeyDown={submitAuthFormOnEnter} noValidate className='mt-8 space-y-6'>
                   <div>
                     <p className='mb-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300'>
                       Reset code
@@ -494,7 +495,7 @@ const ForgotPassword = () => {
                       disabled={countdown > 0 || resendLoading || isRateLimited}
                       className='font-semibold text-emerald-500 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:text-slate-400 dark:hover:text-emerald-400 dark:disabled:text-slate-500'>
                       {resendLoading
-                        ? 'Sending...'
+                        ? <span className='inline-flex items-center gap-2'><AuthLoadingIndicator />Sending...</span>
                         : countdown > 0
                           ? `Resend code in ${countdown}s`
                           : 'Resend code'}
@@ -503,7 +504,7 @@ const ForgotPassword = () => {
                 </form>
               </>
             ) : (
-              <form onSubmit={handleReset} noValidate className='mt-8 space-y-6'>
+              <form onSubmit={handleReset} onKeyDown={submitAuthFormOnEnter} noValidate className='mt-8 space-y-6'>
                 <div>
                   <label
                     htmlFor='reset-password'
@@ -531,7 +532,7 @@ const ForgotPassword = () => {
                       autoComplete='new-password'
                       aria-invalid={Boolean(fieldErrors.password)}
                       aria-describedby={fieldErrors.password ? 'reset-password-error' : undefined}
-                      className={`${inputClasses} pr-11 ${fieldErrors.password ? 'border-rose-500 focus:border-rose-400 focus:ring-rose-400/30 dark:border-rose-500' : ''}`}
+                      className={`${inputClasses} pr-11 ${fieldErrors.password ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/10' : ''}`}
                     />
                     <button
                       type='button'
@@ -601,7 +602,7 @@ const ForgotPassword = () => {
                       autoComplete='new-password'
                       aria-invalid={Boolean(fieldErrors.confirmPassword || confirmMismatch)}
                       aria-describedby={fieldErrors.confirmPassword || confirmMismatch ? 'reset-confirm-password-error' : undefined}
-                      className={`${inputClasses} pr-11 ${fieldErrors.confirmPassword || confirmMismatch ? 'border-rose-500 focus:border-rose-400 focus:ring-rose-400/30 dark:border-rose-500' : ''}`}
+                      className={`${inputClasses} pr-11 ${fieldErrors.confirmPassword || confirmMismatch ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/10' : ''}`}
                     />
                     <button
                       type='button'
@@ -626,7 +627,7 @@ const ForgotPassword = () => {
                   <span className='inline-flex items-center gap-2'>
                     {passwordResetLoading ? (
                       <>
-                        <LoadingIndicator />
+                        <AuthLoadingIndicator />
                         Resetting password...
                       </>
                     ) : (

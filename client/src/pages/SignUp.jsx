@@ -12,9 +12,10 @@ import { useTimedMessage } from '../hooks/useTimedMessage.js';
 import { mapAuthError, getRetryAfterSeconds } from '../utils/authErrorMapper.js';
 import { AUTH_FEEDBACK_TIMEOUTS } from '../constants/authFeedback.js';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton.jsx';
-import LoadingIndicator from '../components/ui/LoadingIndicator.jsx';
+import AuthLoadingIndicator from '../components/auth/AuthLoadingIndicator.jsx';
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js';
 import { PASSWORD_REQUIREMENTS } from '../constants/passwordRequirements.js';
+import submitAuthFormOnEnter from '../utils/submitAuthFormOnEnter.js';
 
 const SignUp = () => {
   const dispatch = useDispatch();
@@ -68,7 +69,7 @@ const SignUp = () => {
 
   const getInputClass = (hasError, extra = '') => {
     const stateClass = hasError
-      ? 'border-rose-500 focus:border-rose-400 focus:ring-rose-400/60 dark:border-rose-500 dark:focus:border-rose-400'
+      ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/10 dark:focus:border-rose-400'
       : 'border-slate-200/60 focus:border-emerald-400 focus:ring-emerald-500/20 dark:border-trackit-border/60 dark:focus:border-emerald-400';
     return `${inputBaseClasses} ${stateClass} ${extra}`.trim();
   };
@@ -303,7 +304,7 @@ const SignUp = () => {
           onPause={pauseBlockAlert}
           onResume={resumeBlockAlert}
         />
-      <form onSubmit={handleSubmit} noValidate className='space-y-2.5'>
+      <form onSubmit={handleSubmit} onKeyDown={submitAuthFormOnEnter} noValidate className='space-y-2.5'>
         {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
           <>
           <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} isLoading={loading} disabled={isRateLimited} />
@@ -407,7 +408,7 @@ const SignUp = () => {
           />
         </div>
         <motion.button whileHover={isSignUpComplete && !showSignUpLoading && !isRateLimited ? { y: -1 } : undefined} whileTap={isSignUpComplete && !showSignUpLoading && !isRateLimited ? { scale: .99 } : undefined} type='submit' disabled={!isSignUpComplete || showSignUpLoading || isRateLimited} aria-busy={showSignUpLoading} className={getPrimaryButtonClass(!isSignUpComplete || showSignUpLoading || isRateLimited)}>
-          <span className='inline-flex items-center gap-2'>{showSignUpLoading ? <><LoadingIndicator />Creating account...</> : <>Create account<FiArrowRight className='h-4 w-4' /></>}</span>
+          <span className='inline-flex items-center gap-2'>{showSignUpLoading ? <><AuthLoadingIndicator />Creating account...</> : <>Create account<FiArrowRight className='h-4 w-4' /></>}</span>
         </motion.button>
         <p className='pt-1 text-center text-xs text-slate-600 dark:text-slate-400'>Already have an account? <Link to='/signin' className='font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400'>Sign in</Link></p>
       </form>

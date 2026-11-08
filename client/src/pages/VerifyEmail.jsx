@@ -6,7 +6,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/layout/Navbar.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import OtpInput from '../components/auth/OtpInput.jsx'
-import LoadingIndicator from '../components/ui/LoadingIndicator.jsx'
+import AuthLoadingIndicator from '../components/auth/AuthLoadingIndicator.jsx'
+import submitAuthFormOnEnter from '../utils/submitAuthFormOnEnter.js'
 import { getPrimaryButtonClass } from '../components/ui/buttonStyles.js'
 import FieldError from '../components/auth/FieldError.jsx'
 import FormAlert from '../components/auth/FormAlert.jsx'
@@ -292,6 +293,7 @@ const VerifyEmail = () => {
               />
 
             <form
+              onKeyDown={submitAuthFormOnEnter}
               onSubmit={(event) => {
                 event.preventDefault()
                 handleVerify()
@@ -308,7 +310,7 @@ const VerifyEmail = () => {
                   onChange={handleCodeChange}
                   onComplete={handleVerify}
                   disabled={verificationLoading}
-                  hasError={Boolean(verificationError)}
+                  hasError={Boolean(otpFieldError)}
                   errorId='verify-otp-error'
                   firstInputRef={otpInputRef}
                   autoFocus
@@ -324,7 +326,7 @@ const VerifyEmail = () => {
                 <span className='inline-flex items-center gap-2'>
                   {verificationLoading ? (
                     <>
-                      <LoadingIndicator />
+                      <AuthLoadingIndicator />
                       Verifying...
                     </>
                   ) : (
@@ -344,7 +346,7 @@ const VerifyEmail = () => {
                   disabled={countdown > 0 || resendLoading || !emailIsValid || isRateLimited}
                   className='font-semibold text-emerald-500 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:text-slate-400 dark:hover:text-emerald-400 dark:disabled:text-slate-500'>
                   {resendLoading
-                    ? 'Sending...'
+                    ? <span className='inline-flex items-center gap-2'><AuthLoadingIndicator />Sending...</span>
                     : countdown > 0
                       ? `Resend code in ${countdown}s`
                       : 'Resend code'}
