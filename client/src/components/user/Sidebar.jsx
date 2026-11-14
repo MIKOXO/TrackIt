@@ -11,6 +11,7 @@ import {
   FiX,
   FiChevronLeft,
   FiChevronUp,
+  FiUser,
 } from 'react-icons/fi';
 import { HiOutlineSparkles, HiOutlineMoon, HiOutlineSun } from 'react-icons/hi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -44,8 +45,8 @@ const Sidebar = ({ isOpen, menuItems = defaultMenuItems, onToggle, logoHref = '/
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
   const avatar = (
-    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm font-semibold text-white transition group-hover:shadow-lg group-hover:shadow-emerald-500/40">
-      {user?.name?.charAt(0).toUpperCase()}
+    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-100 text-slate-600 transition group-hover:bg-slate-200 group-hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700 dark:group-hover:text-slate-100">
+      <FiUser className="h-[1.1rem] w-[1.1rem]" />
     </div>
   )
 
