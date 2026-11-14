@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { toggleSidebar } from '../../store/slices/layoutSlice'
 import Navbar from '../../components/layout/Navbar.jsx'
 import Footer from '../../components/layout/Footer.jsx'
-import DashboardNavbar from '../../components/user/DashboardNavbar.jsx'
 import Sidebar from '../../components/user/Sidebar.jsx'
 
 const adminSidebarItems = [
@@ -75,9 +74,8 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-trackit-background dark:text-slate-50 relative overflow-x-hidden">
-      <DashboardNavbar sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} />
-      <Sidebar isOpen={sidebarOpen} menuItems={adminSidebarItems} />
-      <main className={`w-full transition-all duration-300 ${mainPadding} pt-20 px-4 sm:px-6 lg:pr-8`}>
+      <Sidebar isOpen={sidebarOpen} menuItems={adminSidebarItems} onToggle={handleToggleSidebar} logoHref="/admin/dashboard" />
+      <main className={`w-full transition-all duration-300 ${mainPadding} pt-16 lg:pt-6 px-4 sm:px-6 lg:pr-8`}>
         <motion.section
           key={location.pathname}
           className="mb-6 border-b border-slate-200 pb-4 dark:border-trackit-border/60"
