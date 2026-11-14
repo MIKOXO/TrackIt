@@ -1,7 +1,8 @@
 import React from 'react'
-import { FiTrendingUp, FiChevronLeft } from 'react-icons/fi'
+import { FiChevronLeft } from 'react-icons/fi'
 import { HiOutlineMoon, HiOutlineSun } from 'react-icons/hi'
 import { useSelector, useDispatch } from 'react-redux'
+import { Link } from 'react-router-dom'
 import { toggleTheme } from '../../store/slices/themeSlice'
 
 const DashboardNavbar = ({ sidebarOpen, onToggleSidebar }) => {
@@ -23,15 +24,11 @@ const DashboardNavbar = ({ sidebarOpen, onToggleSidebar }) => {
         </button>
 
         {/* Center - Logo */}
-        <div className="flex items-center gap-2 pl-14 lg:pl-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-trackit-accent to-emerald-500">
-            <FiTrendingUp className="h-5 w-5 text-white" />
-          </div>
-          <div className="hidden sm:flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">TrackIt</span>
-            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400">Dashboard</span>
-          </div>
-        </div>
+        <Link to="/dashboard" className="flex items-center gap-2 pl-14 lg:pl-0">
+          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            Track<span className="text-trackit-accent">It.</span>
+          </span>
+        </Link>
 
         {/* Right - Theme Toggle & Avatar */}
         <div className="flex items-center gap-3 ml-auto">
