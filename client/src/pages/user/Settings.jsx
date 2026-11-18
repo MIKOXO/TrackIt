@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  FiUser,
-  FiLock,
-  FiGlobe,
   FiEye,
   FiEyeOff,
   FiCheck,
   FiX,
-  FiTrash2,
 } from 'react-icons/fi'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
@@ -279,18 +275,18 @@ const Settings = () => {
 
   return (
     <>
-      <div className="space-y-8">
+      <div className="space-y-5">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4 rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6"
+        className="rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600/90 dark:text-emerald-300/90">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-emerald-600/90 dark:text-emerald-300/90">
           Settings
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">Settings</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Manage your account preferences</p>
+        <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Settings</h1>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Manage your account preferences</p>
       </motion.div>
 
       {/* Tabs */}
@@ -309,7 +305,7 @@ const Settings = () => {
           className={[
             'rounded-xl px-4 py-2 text-sm font-semibold transition',
             activeTab === 'profile'
-              ? 'bg-gradient-to-r from-trackit-accent to-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              ? 'bg-trackit-accent text-white shadow-sm'
               : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/50',
           ].join(' ')}
         >
@@ -325,7 +321,7 @@ const Settings = () => {
           className={[
             'rounded-xl px-4 py-2 text-sm font-semibold transition',
             activeTab === 'security'
-              ? 'bg-gradient-to-r from-trackit-accent to-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              ? 'bg-trackit-accent text-white shadow-sm'
               : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/50',
           ].join(' ')}
         >
@@ -341,7 +337,7 @@ const Settings = () => {
           className={[
             'rounded-xl px-4 py-2 text-sm font-semibold transition',
             activeTab === 'preferences'
-              ? 'bg-gradient-to-r from-trackit-accent to-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              ? 'bg-trackit-accent text-white shadow-sm'
               : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/50',
           ].join(' ')}
         >
@@ -360,12 +356,9 @@ const Settings = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+              className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <FiUser className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Profile Information</h2>
-              </div>
+              <h2 className="mb-5 text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">Profile Information</h2>
 
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 <div>
@@ -410,12 +403,9 @@ const Settings = () => {
               </form>
 
               <div className="mt-10 border-t border-slate-200/60 pt-6 dark:border-trackit-border/60">
-                <div className="flex items-center gap-3">
-                  <FiTrash2 className="h-5 w-5 text-rose-500" />
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    Delete account
-                  </h3>
-                </div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                  Delete account
+                </h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Permanently delete your account and all associated data. This action cannot be undone.
                 </p>
@@ -445,12 +435,9 @@ const Settings = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+              className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <FiLock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Security</h2>
-              </div>
+              <h2 className="mb-5 text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">Security</h2>
 
               {!showPasswordForm ? (
                 !user?.hasPassword ? (
@@ -629,12 +616,9 @@ const Settings = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
+              className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <FiGlobe className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Preferences</h2>
-              </div>
+              <h2 className="mb-5 text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">Preferences</h2>
 
               <div className="space-y-4">
                 <div>

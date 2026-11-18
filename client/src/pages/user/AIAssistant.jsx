@@ -190,19 +190,18 @@ const AIAssistant = () => {
 
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 pb-6 pt-3 sm:gap-6 sm:pt-4">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 pb-4 pt-1">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-visible rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30 sm:p-6"
+          className="relative overflow-visible rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30"
         >
-          <div className="pointer-events-none absolute -top-24 right-0 h-48 w-48 rounded-full bg-slate-200/50 blur-3xl dark:bg-slate-700/20" />
-          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="relative flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600/90 dark:text-emerald-300/90">AI Assistant</p>
-              <h1 className="mt-2 text-3xl font-bold leading-tight text-slate-900 dark:text-slate-50">Get personalized AI guidance</h1>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Ask questions about your finances and keep the conversation going.</p>
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-emerald-600/90 dark:text-emerald-300/90">AI Assistant</p>
+              <h1 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-slate-50">Get personalized AI guidance</h1>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Ask questions about your finances and keep the conversation going.</p>
             </div>
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:w-auto">
               <div ref={historyDropdownRef} className="relative">
@@ -265,7 +264,7 @@ const AIAssistant = () => {
 
               <button
                 onClick={handleStartNewChat}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-trackit-accent px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-600 hover:shadow-xl sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-trackit-accent px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600 sm:w-auto"
               >
                 <FiPlus className="h-4 w-4" />
                 New Chat
@@ -281,7 +280,7 @@ const AIAssistant = () => {
           className="flex min-h-0 flex-1 flex-col"
         >
           <div
-            className="flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-xl shadow-slate-900/5 dark:border-trackit-border/70 dark:bg-slate-900"
+             className="flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-trackit-border/60 dark:bg-slate-900"
             style={{ height: 'clamp(360px, calc(100dvh - 260px), 820px)' }}
           >
           <div className="flex h-full min-h-0 flex-col">
@@ -315,9 +314,9 @@ const AIAssistant = () => {
                       className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm sm:max-w-[76%] md:text-[0.95rem] xl:max-w-[65%] 2xl:max-w-[56rem] ${
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-6 sm:max-w-[76%] xl:max-w-[65%] ${
                           message.type === 'user'
-                            ? 'bg-trackit-accent text-white shadow-lg shadow-emerald-500/30 dark:bg-trackit-accent'
+                            ? 'bg-trackit-accent text-white'
                             : 'border border-slate-200/60 bg-white text-slate-900 dark:border-slate-700/80 dark:bg-slate-800/90 dark:text-slate-100'
                         }`}
                       >
@@ -366,7 +365,7 @@ const AIAssistant = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim() || isLoading}
-                  className="flex h-12 w-full flex-shrink-0 items-center justify-center gap-2 rounded-2xl bg-trackit-accent px-4 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-600 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 sm:w-12 sm:px-0"
+                  className="flex h-12 w-full flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-trackit-accent px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-12 sm:px-0"
                 >
                   <FiSend className="h-5 w-5" />
                   <span className="sm:hidden">Send</span>
