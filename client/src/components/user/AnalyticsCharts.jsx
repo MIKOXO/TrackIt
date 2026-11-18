@@ -20,11 +20,11 @@ const formatCompactNumber = (value) =>
   new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value ?? 0)
 
 const ChartCard = ({ title, subtitle, children, right }) => (
-  <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30">
-    <div className="mb-4 flex items-start justify-between gap-4">
+  <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-trackit-border/60 dark:bg-slate-900/30">
+    <div className="mb-3 flex items-start justify-between gap-4">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{title}</h3>
-        {subtitle ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p> : null}
+        <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">{title}</h3>
+        {subtitle ? <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p> : null}
       </div>
       {right ? <div className="flex-shrink-0">{right}</div> : null}
     </div>
@@ -99,10 +99,10 @@ export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
   )
 
   return (
-    <div className="grid gap-6 lg:grid-cols-5">
+    <div className="grid gap-4 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <ChartCard title="Last Days" subtitle="Daily net movement (income minus expenses)">
-          <div className="h-80">
+          <div className="h-72">
             {!hasDaily ? (
               <div className="flex h-full items-center justify-center text-slate-600 dark:text-slate-400">
                 No daily data yet
@@ -127,8 +127,8 @@ export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
                   <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={formatCompactNumber} />
                   <Tooltip cursor={false} content={(props) => <ChartTooltip {...props} isDark={isDark} currency={currency} />} />
                   <Legend />
-                  <Bar dataKey="income" name="Income" fill="#22c55e" radius={[12, 12, 4, 4]} />
-                  <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[12, 12, 4, 4]} />
+                  <Bar dataKey="income" name="Income" fill="#22c55e" radius={[8, 8, 2, 2]} />
+                  <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[8, 8, 2, 2]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -204,16 +204,6 @@ export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={monthly} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                  <defs>
-                    <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
-                    </linearGradient>
-                    <linearGradient id="expenseFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0.04} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid stroke={gridStroke} vertical={false} strokeWidth={1} strokeDasharray="4 4" />
                   <XAxis dataKey="monthLabel" tick={axisTick} axisLine={false} tickLine={false} />
                   <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={formatCompactNumber} />
@@ -227,7 +217,8 @@ export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
                     dataKey="income"
                     name="Income"
                     stroke="#22c55e"
-                    fill="url(#incomeFill)"
+                    fill="#22c55e"
+                    fillOpacity={0.12}
                     strokeWidth={seriesStrokeWidth}
                     dot={false}
                     activeDot={{ r: 3 }}
@@ -237,7 +228,8 @@ export const AnalyticsCharts = ({ analytics, isDark, currency }) => {
                     dataKey="expense"
                     name="Expenses"
                     stroke="#ef4444"
-                    fill="url(#expenseFill)"
+                    fill="#ef4444"
+                    fillOpacity={0.1}
                     strokeWidth={seriesStrokeWidth}
                     dot={false}
                     activeDot={{ r: 3 }}
