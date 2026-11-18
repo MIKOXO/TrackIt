@@ -13,7 +13,8 @@ import {
   FiChevronUp,
   FiUser,
 } from 'react-icons/fi';
-import { HiOutlineSparkles, HiOutlineMoon, HiOutlineSun } from 'react-icons/hi';
+import { HiOutlineMoon, HiOutlineSun } from 'react-icons/hi';
+import { LuBrainCircuit } from 'react-icons/lu';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import { clearUser } from '../../store/slices/authSlice';
@@ -30,7 +31,7 @@ const defaultMenuItems = [
     path: '/dashboard/transactions',
   },
   { icon: FiPieChart, label: 'Analytics', path: '/dashboard/analytics' },
-  { icon: HiOutlineSparkles, label: 'AI Assistant', path: '/dashboard/ai-assistant' },
+  { icon: LuBrainCircuit, label: 'AI Assistant', path: '/dashboard/ai-assistant' },
   { icon: FiSettings, label: 'Settings', path: '/dashboard/settings' },
 ];
 

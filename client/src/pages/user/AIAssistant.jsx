@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiSend, FiPlus, FiChevronDown, FiClock, FiTrash2 } from 'react-icons/fi'
-import { HiOutlineSparkles } from 'react-icons/hi'
+import { LuBrainCircuit } from 'react-icons/lu'
 import { useDispatch, useSelector } from 'react-redux'
 import { useToast } from '../../components/ui/ToastProvider.jsx'
 import {
@@ -296,8 +296,8 @@ const AIAssistant = () => {
               ) : messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
-                      <HiOutlineSparkles className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200/80 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                      <LuBrainCircuit className="h-8 w-8 text-slate-600 dark:text-slate-300" strokeWidth={1.5} />
                     </div>
                     <p className="text-slate-600 dark:text-slate-400">Start a conversation to get personalized financial advice!</p>
                   </div>
